@@ -1,6 +1,13 @@
-package java.com.painter.web_painter.service;
+package com.painter.web_painter.Service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Stack;
@@ -63,5 +70,30 @@ public class PaintService {
         deepCopy(undoStack);
         shapes.clear();
         redoStack.clear();
+    }
+    public String SavetoJson() throws IOException{
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(shapes);
+    }
+    public String SavetoXml() throws IOException{
+        XmlMapper mapper = new XmlMapper();
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(shapes);
+    }
+    public void loadFromFile(MultipartFile file) throws IOException {
+        String content = new String(file.getBytes());
+        String fileName = file.getOriginalFilename();
+
+        List<Shape> loadedShapes;
+
+        if (fileName != null && fileName.endsWith(".xml")) {
+            XmlMapper xmlMapper = new XmlMapper();
+            loadedShapes = xmlMapper.readValue(content, new TypeReference<List<Shape>>(){});
+        } else {
+            ObjectMapper jsonMapper = new ObjectMapper();
+            loadedShapes = jsonMapper.readValue(content, new TypeReference<List<Shape>>(){});
+        }
+
+        this.clearBoard();
+        this.shapes.addAll(loadedShapes);
     }
 }
