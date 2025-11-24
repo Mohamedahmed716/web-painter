@@ -2,6 +2,7 @@ package com.painter.web_painter.model;
 
 import java.util.UUID;
 
+
 public class Circle extends Shape {
     private double radius;
 
