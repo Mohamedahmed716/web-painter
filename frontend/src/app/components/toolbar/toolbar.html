@@ -1,1 +1,26 @@
-<p>toolbar works!</p>
+<div class="toolbar">
+
+  <div class="group-label">Shapes</div>
+  <div class="tools-container">
+    <button *ngFor="let tool of tools"
+            class="tool-btn"
+            [class.selected]="tool.id === activeTool"
+            [title]="tool.label"
+            (click)="selectTool(tool.id)">
+      {{ tool.icon }}
+    </button>
+  </div>
+
+  <div class="separator"></div>
+
+  <div class="group-label">Colors</div>
+  <div class="palette-container">
+    <div *ngFor="let color of colors"
+         class="color-swatch"
+         [style.background-color]="color"
+         [class.selected]="color === activeColor"
+         (click)="selectColor(color)">
+    </div>
+  </div>
+
+</div>

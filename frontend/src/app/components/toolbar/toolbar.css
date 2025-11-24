@@ -1,0 +1,86 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.separator {
+  width: 1px;
+  height: 40px;
+  background-color: #e0e0e0;
+}
+
+.group-label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: bold;
+  margin-right: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: none; /* remove this line if you want to see text labels like "SHAPES" */
+}
+
+/* --- Tool Button Styling --- */
+.tools-container {
+  display: flex;
+  gap: 8px;
+}
+
+.tool-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ccc;
+  border-radius: 6px; /* Slightly rounded corners */
+  background-color: white;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #555;
+}
+
+.tool-btn:hover {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+}
+
+/* Active State for Tools */
+.tool-btn.selected {
+  background-color: #e7f1ff; /* Light blue bg */
+  color: #0056b3; /* Blue icon */
+  border-color: #0056b3;
+  box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+}
+
+/* --- Color Palette Styling --- */
+.palette-container {
+  display: flex;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%; /* Circle */
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.1);
+  transition: transform 0.1s;
+  position: relative;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+/* Active State for Colors */
+.color-swatch.selected {
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px #333; /* Ring effect */
+  transform: scale(1.1);
+}
