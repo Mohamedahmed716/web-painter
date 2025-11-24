@@ -1,7 +1,8 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, Input, inject } from '@angular/core';
+import {Component, ElementRef, ViewChild, AfterViewInit, Input, inject, Injector} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api';
 import { Shape } from '../../models/shape';
+import { DrawingService } from '../../services/drawing';
 
 @Component({
   selector: 'app-board',
@@ -10,22 +11,87 @@ import { Shape } from '../../models/shape';
   templateUrl: './board.component.html',
   styleUrl: './board.component.css',
 })
+
 export class BoardComponent implements AfterViewInit {
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
   private apiService = inject(ApiService);
+  private drawingService = inject(DrawingService);
 
   @Input() currentTool: string = 'circle';
   @Input() currentColor: string = '#000000';
-
   shapes: Shape[] = [];
+
   isDrawing = false;
   startX = 0;
   startY = 0;
 
   ngAfterViewInit(): void {
     this.ctx = this.canvasRef.nativeElement.getContext('2d')!;
+    this.drawingService.currentTool$.subscribe(tool => this.currentTool = tool);
+    this.drawingService.currentColor$.subscribe(color => this.currentColor = color);
     this.refreshBoard();
+  }
+
+  onMouseDown($event: MouseEvent) {
+    this.isDrawing = true;
+    this.startX = $event.offsetX;
+    this.startY = $event.offsetY;
+  }
+
+  onMouseMove($event: MouseEvent) {
+    if(!this.isDrawing) return;
+    this.redrawAll();
+    this.drawPreview(this.startX, this.startY, $event.offsetX, $event.offsetY);
+  }
+
+  onMouseUp($event: MouseEvent) {
+    if(!this.isDrawing) return;
+    this.isDrawing = false;
+    const type = this.currentTool;
+    const params: any = {};
+    if (type === 'circle') {
+      const r = Math.sqrt(Math.pow($event.offsetX - this.startX, 2) + Math.pow($event.offsetY - this.startY, 2));
+      params.x = this.startX;
+      params.y = this.startY;
+      params.radius = r;
+    }
+    else if (type === 'rectangle' || type === 'square') {
+      params.x = this.startX;
+      params.y = this.startY;
+      params.width = $event.offsetX - this.startX;
+      params.height = $event.offsetY - this.startY;
+    }
+    else if (type === 'line') {
+      params.x = this.startX;
+      params.y = this.startY;
+      params.x2 = $event.offsetX;
+      params.y2 = $event.offsetY;
+    }
+    // probably not right
+    else if (type === 'ellipse') {
+      params.x = (this.startX + $event.offsetX) / 2;
+      params.y = (this.startY + $event.offsetY) / 2;
+      params.radiusX = Math.abs($event.offsetX - this.startX) / 2;
+      params.radiusY = Math.abs($event.offsetY - this.startY) / 2;
+    }
+    else if (type === 'triangle') {
+      params.x = (this.startX + $event.offsetX) / 2;
+      params.y = this.startY;
+      params.x2 = this.startX;
+      params.y2 = $event.offsetY;
+      params.x3 = $event.offsetX;
+      params.y3 = $event.offsetY;
+    }
+    params.color = this.currentColor;
+
+    this.apiService.createShape(type, params).subscribe({
+      next: (shapes) => {
+        this.shapes = shapes;
+        this.refreshBoard();
+      },
+      error: (err) => console.error('Error creating shape', err),
+    });
   }
 
   refreshBoard() {
@@ -37,7 +103,6 @@ export class BoardComponent implements AfterViewInit {
       error: (err) => console.error('Error fetching shapes', err),
     });
   }
-
   redrawAll() {
     this.ctx.clearRect(
       0,
@@ -47,6 +112,7 @@ export class BoardComponent implements AfterViewInit {
     );
     this.shapes.forEach((shape) => this.drawShape(shape));
   }
+
   // Rendering Shapes
 
   drawShape(s: Shape) {

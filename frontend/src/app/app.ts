@@ -1,9 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-
-
-import { BoardComponent } from './components/board/board.component';
-import { ToolbarComponent } from './components/toolbar/toolbar.component';
+import { BoardComponent } from './components/board/board';
+import { ToolbarComponent } from './components/toolbar/toolbar';
 
 @Component({
   selector: 'app-root',
