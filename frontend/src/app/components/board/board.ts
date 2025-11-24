@@ -65,7 +65,7 @@ export class BoardComponent implements AfterViewInit {
       this.ctx.ellipse(s.x, s.y, (s as any).radiusX, (s as any).radiusY, 0, 0, 2 * Math.PI);
     } else if (s.type === 'triangle') {
       const t = s as any;
-      this.ctx.moveTo(t.x, t.y); // Top point of the triangle
+      this.ctx.moveTo(t.x, t.y); // Top point
       this.ctx.lineTo(t.x2, t.y2);
       this.ctx.lineTo(t.x3, t.y3);
       this.ctx.closePath();
