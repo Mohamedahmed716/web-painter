@@ -9,10 +9,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         property = "type"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = CircleDTO.class, name = "circle"),
-        @JsonSubTypes.Type(value = RectangleDTO.class, name = "rectangle"),
-        @JsonSubTypes.Type(value = TriangleDTO.class, name = "triangle"),
-        @JsonSubTypes.Type(value = LineSegmentDTO.class, name = "line")
+        @JsonSubTypes.Type(value = CircleDto.class, name = "circle"),
+        @JsonSubTypes.Type(value = RectangleDto.class, name = "rectangle"),
+        @JsonSubTypes.Type(value = TriangleDto.class, name = "triangle"),
+        @JsonSubTypes.Type(value = LineSegmentDto.class, name = "line"),
+        @JsonSubTypes.Type(value = SquareDto.class, name = "square"),
+        @JsonSubTypes.Type(value = EllipseDto.class, name = "ellipse")
+
 })
 
 public abstract class ShapeDto {
