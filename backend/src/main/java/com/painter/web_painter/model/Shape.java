@@ -12,10 +12,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = Circle.class, name = "circle"),
     @JsonSubTypes.Type(value = Rectangle.class, name = "rectangle"),
     @JsonSubTypes.Type(value = Square.class, name = "square"),
-
     @JsonSubTypes.Type(value = LineSegment.class, name = "line"),
     @JsonSubTypes.Type(value = Ellipse.class, name = "ellipse"),
-        @JsonSubTypes.Type(value = Triangle.class, name = "triangle")
+    @JsonSubTypes.Type(value = Triangle.class, name = "triangle"),
+    @JsonSubTypes.Type(value = FreehandShape.class, name = "freehand")
 
 })
 public abstract class Shape implements Cloneable {
