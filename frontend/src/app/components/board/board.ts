@@ -25,7 +25,7 @@ export class BoardComponent implements AfterViewInit {
   isDrawing = false;
   startX = 0;
   startY = 0;
-
+  
   ngAfterViewInit(): void {
     this.ctx = this.canvasRef.nativeElement.getContext('2d')!;
     this.drawingService.currentTool$.subscribe(tool => this.currentTool = tool);
