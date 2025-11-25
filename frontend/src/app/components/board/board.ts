@@ -59,51 +59,15 @@ export class BoardComponent implements AfterViewInit {
       type: type
     };
 
-    if (type === 'circle') {
-      params.x = this.startX;
-      params.y = this.startY;
-      params.radius = Math.sqrt(Math.pow(currentX - this.startX, 2) + Math.pow(currentY - this.startY, 2));
-    }
-    else if (type === 'rectangle') {
-      params.x = Math.min(this.startX, currentX);
-      params.y = Math.min(this.startY, currentY);
-      params.width = Math.abs(currentX - this.startX);
-      params.height = Math.abs(currentY - this.startY);
-    }
-    else if (type === 'square') {
-      const w = Math.abs(currentX - this.startX);
-      const h = Math.abs(currentY - this.startY);
-      const side = Math.max(w, h);
+    params.x1 = this.startX;
+    params.y1 = this.startY;
+    params.x2 = currentX;
+    params.y2 = currentY;
 
-      params.x = (currentX < this.startX) ? this.startX - side : this.startX;
-      params.y = (currentY < this.startY) ? this.startY - side : this.startY;
-      params.width = side;
-      params.height = side;
-    }
-    else if (type === 'line') {
-      params.x = this.startX;
-      params.y = this.startY;
-      params.x2 = currentX;
-      params.y2 = currentY;
-    }
-    else if (type === 'ellipse') {
-      params.x = (this.startX + currentX) / 2;
-      params.y = (this.startY + currentY) / 2;
-      params.radiusX = Math.abs(currentX - this.startX) / 2;
-      params.radiusY = Math.abs(currentY - this.startY) / 2;
-    }
-    else if (type === 'triangle') {
-      params.x = (this.startX + currentX) / 2;
-      params.y = this.startY;
-      params.x2 = this.startX;
-      params.y2 = currentY;
-      params.x3 = currentX;
-      params.y3 = currentY;
-    }
-
+    console.log("SENDING TO BACKEND:", { type, params });
     this.apiService.createShape(type, params).subscribe({
-      next: (newShapeOrList) => {
-        this.shapes = newShapeOrList;
+      next: (data) => {
+        this.shapes = data;
         this.redrawAll();
       },
       error: (err) => console.error('Error creating shape', err),
