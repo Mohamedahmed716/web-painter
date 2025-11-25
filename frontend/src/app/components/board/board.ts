@@ -30,6 +30,8 @@ export class BoardComponent implements AfterViewInit {
     this.ctx = this.canvasRef.nativeElement.getContext('2d')!;
     this.drawingService.currentTool$.subscribe(tool => this.currentTool = tool);
     this.drawingService.currentColor$.subscribe(color => this.currentColor = color);
+    this.drawingService.undo$.subscribe(() => this.undo());
+    this.drawingService.redo$.subscribe(() => this.redo());
     this.refreshBoard();
   }
 
@@ -46,49 +48,63 @@ export class BoardComponent implements AfterViewInit {
   }
 
   onMouseUp($event: MouseEvent) {
-    if(!this.isDrawing) return;
+    if (!this.isDrawing) return;
     this.isDrawing = false;
+
     const type = this.currentTool;
-    const params: any = {};
+    const currentX = $event.offsetX;
+    const currentY = $event.offsetY;
+    const params: any = {
+      color: this.currentColor,
+      type: type
+    };
+
     if (type === 'circle') {
-      const r = Math.sqrt(Math.pow($event.offsetX - this.startX, 2) + Math.pow($event.offsetY - this.startY, 2));
       params.x = this.startX;
       params.y = this.startY;
-      params.radius = r;
+      params.radius = Math.sqrt(Math.pow(currentX - this.startX, 2) + Math.pow(currentY - this.startY, 2));
     }
-    else if (type === 'rectangle' || type === 'square') {
-      params.x = this.startX;
-      params.y = this.startY;
-      params.width = $event.offsetX - this.startX;
-      params.height = $event.offsetY - this.startY;
+    else if (type === 'rectangle') {
+      params.x = Math.min(this.startX, currentX);
+      params.y = Math.min(this.startY, currentY);
+      params.width = Math.abs(currentX - this.startX);
+      params.height = Math.abs(currentY - this.startY);
+    }
+    else if (type === 'square') {
+      const w = Math.abs(currentX - this.startX);
+      const h = Math.abs(currentY - this.startY);
+      const side = Math.max(w, h);
+
+      params.x = (currentX < this.startX) ? this.startX - side : this.startX;
+      params.y = (currentY < this.startY) ? this.startY - side : this.startY;
+      params.width = side;
+      params.height = side;
     }
     else if (type === 'line') {
       params.x = this.startX;
       params.y = this.startY;
-      params.x2 = $event.offsetX;
-      params.y2 = $event.offsetY;
+      params.x2 = currentX;
+      params.y2 = currentY;
     }
-    // probably not right
     else if (type === 'ellipse') {
-      params.x = (this.startX + $event.offsetX) / 2;
-      params.y = (this.startY + $event.offsetY) / 2;
-      params.radiusX = Math.abs($event.offsetX - this.startX) / 2;
-      params.radiusY = Math.abs($event.offsetY - this.startY) / 2;
+      params.x = (this.startX + currentX) / 2;
+      params.y = (this.startY + currentY) / 2;
+      params.radiusX = Math.abs(currentX - this.startX) / 2;
+      params.radiusY = Math.abs(currentY - this.startY) / 2;
     }
     else if (type === 'triangle') {
-      params.x = (this.startX + $event.offsetX) / 2;
+      params.x = (this.startX + currentX) / 2;
       params.y = this.startY;
       params.x2 = this.startX;
-      params.y2 = $event.offsetY;
-      params.x3 = $event.offsetX;
-      params.y3 = $event.offsetY;
+      params.y2 = currentY;
+      params.x3 = currentX;
+      params.y3 = currentY;
     }
-    params.color = this.currentColor;
 
     this.apiService.createShape(type, params).subscribe({
-      next: (shapes) => {
-        this.shapes = shapes;
-        this.refreshBoard();
+      next: (newShapeOrList) => {
+        this.shapes = newShapeOrList;
+        this.redrawAll();
       },
       error: (err) => console.error('Error creating shape', err),
     });
@@ -148,8 +164,13 @@ export class BoardComponent implements AfterViewInit {
     if (this.currentTool === 'circle') {
       const r = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
       this.ctx.arc(x1, y1, r, 0, 2 * Math.PI);
-    } else if (this.currentTool === 'rectangle' || this.currentTool === 'square') {
+    } else if (this.currentTool === 'rectangle') {
       this.ctx.rect(x1, y1, x2 - x1, y2 - y1);
+    } else if (this.currentTool === 'square') {
+      const side = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+      const rectX = (x2 < x1) ? x1 - side : x1;
+      const rectY = (y2 < y1) ? y1 - side : y1;
+      this.ctx.rect(rectX, rectY, side, side);
     } else if (this.currentTool === 'line') {
       this.ctx.moveTo(x1, y1);
       this.ctx.lineTo(x2, y2);
