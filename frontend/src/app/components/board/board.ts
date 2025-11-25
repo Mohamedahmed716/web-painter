@@ -17,7 +17,7 @@ export class BoardComponent implements AfterViewInit {
   private apiService = inject(ApiService);
   private drawingService = inject(DrawingService);
 
-  @Input() currentTool: string = 'line';
+  @Input() currentTool: string = 'circle';
   @Input() currentColor: string = '#000000';
   shapes: Shape[] = [];
 
@@ -39,7 +39,6 @@ export class BoardComponent implements AfterViewInit {
     this.startX = $event.offsetX;
     this.startY = $event.offsetY;
 
-    // Initialize freehand points
     if (this.currentTool === 'freehand') {
       this.freehandPoints = [{ x: this.startX, y: this.startY }];
     }
@@ -48,7 +47,6 @@ export class BoardComponent implements AfterViewInit {
   onMouseMove($event: MouseEvent) {
     if (!this.isDrawing) return;
 
-    // For freehand, we keep adding points to the array
     if (this.currentTool === 'freehand') {
       this.freehandPoints.push({ x: $event.offsetX, y: $event.offsetY });
     }
@@ -62,17 +60,11 @@ export class BoardComponent implements AfterViewInit {
     this.isDrawing = false;
 
     const type = this.currentTool;
-    const params: any = {
-      color: this.currentColor,
-      type: type,
-    };
+    const params: any = { color: this.currentColor, type: type };
 
-    // Handle Freehand Payload
     if (type === 'freehand') {
-      // Send the entire array of points
       params.points = this.freehandPoints;
     } else {
-      // Standard Shapes (Start/End points)
       params.x1 = this.startX;
       params.y1 = this.startY;
       params.x2 = $event.offsetX;
@@ -82,9 +74,8 @@ export class BoardComponent implements AfterViewInit {
     this.apiService.createShape(type, params).subscribe({
       next: (data) => {
         this.shapes = data;
-        this.redrawAll();
-        // Clear points after save
         this.freehandPoints = [];
+        this.redrawAll();
       },
       error: (err) => console.error('Error creating shape', err),
     });
@@ -110,8 +101,6 @@ export class BoardComponent implements AfterViewInit {
     this.shapes.forEach((shape) => this.drawShape(shape));
   }
 
-  // --- RENDERING ---
-
   drawShape(s: Shape) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = s.color;
@@ -132,31 +121,22 @@ export class BoardComponent implements AfterViewInit {
       this.ctx.lineTo(t.x2, t.y2);
       this.ctx.lineTo(t.x3, t.y3);
       this.ctx.closePath();
-    }
-    // Handle drawing saved freehand shapes (Assumes backend returns 'points')
-    else if (s.type === 'freehand' && (s as any).points) {
+    } else if (s.type === 'freehand' && (s as any).points) {
       const points = (s as any).points;
-      if (points.length > 0) {
+      if (points && points.length > 0) {
         this.ctx.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) {
           this.ctx.lineTo(points[i].x, points[i].y);
         }
       }
     }
-
     this.ctx.stroke();
   }
 
   drawPreview(x1: number, y1: number, x2: number, y2: number) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = this.currentTool === 'freehand' ? this.currentColor : 'gray';
-
-    // Only dash the line for geometric shapes, not freehand
-    if (this.currentTool !== 'freehand') {
-      this.ctx.setLineDash([5, 5]);
-    } else {
-      this.ctx.setLineDash([]);
-    }
+    this.ctx.setLineDash(this.currentTool === 'freehand' ? [] : [5, 5]);
 
     if (this.currentTool === 'circle') {
       const r = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -182,9 +162,7 @@ export class BoardComponent implements AfterViewInit {
       this.ctx.lineTo(x1, y2);
       this.ctx.lineTo(x2, y2);
       this.ctx.closePath();
-    }
-    // Logic for Freehand Preview
-    else if (this.currentTool === 'freehand') {
+    } else if (this.currentTool === 'freehand') {
       if (this.freehandPoints.length > 0) {
         this.ctx.moveTo(this.freehandPoints[0].x, this.freehandPoints[0].y);
         for (let i = 1; i < this.freehandPoints.length; i++) {
@@ -192,7 +170,6 @@ export class BoardComponent implements AfterViewInit {
         }
       }
     }
-
     this.ctx.stroke();
     this.ctx.setLineDash([]);
   }
@@ -203,7 +180,7 @@ export class BoardComponent implements AfterViewInit {
         this.shapes = shapes;
         this.refreshBoard();
       },
-      error: (err) => console.error('Error performing undo', err),
+      error: (err) => console.error(err),
     });
   }
 
@@ -213,7 +190,7 @@ export class BoardComponent implements AfterViewInit {
         this.shapes = shapes;
         this.refreshBoard();
       },
-      error: (err) => console.error('Error performing redo', err),
+      error: (err) => console.error(err),
     });
   }
 }

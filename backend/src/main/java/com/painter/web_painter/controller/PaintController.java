@@ -1,26 +1,35 @@
 package com.painter.web_painter.controller;
-import com.painter.web_painter.Service.PaintService;
-import com.painter.web_painter.Service.ShapeFactory;
-import com.painter.web_painter.model.Shape;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.painter.web_painter.Service.PaintService;
+import com.painter.web_painter.Service.ShapeFactory;
+import com.painter.web_painter.model.Shape;
+
 @RestController
 @RequestMapping("/api")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:4200")
 public class PaintController {
+
+    private final PaintService paintService;
+    private final ShapeFactory factory;
+
     @Autowired
-    private PaintService paintService;
-    private ShapeFactory factory;
     public PaintController(ShapeFactory factory, PaintService paintService) {
         this.factory = factory;
         this.paintService = paintService;
@@ -36,7 +45,9 @@ public class PaintController {
         String type = (String) payload.get("type");
         Map<String, Object> params = (Map<String, Object>) payload.get("params");
         Shape s = factory.createShape(type, params);
-        paintService.addShape(s);
+        if (s != null) {
+            paintService.addShape(s);
+        }
         return ResponseEntity.ok(paintService.getShapes());
     }
 
@@ -52,13 +63,11 @@ public class PaintController {
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-
     @GetMapping("/save/json")
     public ResponseEntity<byte[]> saveJson() {
         try {
             String json = paintService.SavetoJson();
             byte[] content = json.getBytes(StandardCharsets.UTF_8);
-
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.json\"")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -73,7 +82,6 @@ public class PaintController {
         try {
             String xml = paintService.SavetoXml();
             byte[] content = xml.getBytes(Charset.forName("ISO-8859-1"));
-
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.xml\"")
                     .contentType(MediaType.APPLICATION_XML)
@@ -83,20 +91,13 @@ public class PaintController {
         }
     }
 
-    // Load File
     @PostMapping("/load")
     public ResponseEntity<String> loadFile(@RequestParam("file") MultipartFile file) {
         try {
             paintService.loadFromFile(file);
             return ResponseEntity.ok("File loaded successfully");
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest().body("Error loading file: " + e.getMessage());
         }
     }
-
-
-
-
-
 }

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import {BehaviorSubject, Subject} from 'rxjs';
-import {BoardComponent} from '../components/board/board';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { BoardComponent } from '../components/board/board';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DrawingService {
   private toolSource = new BehaviorSubject<string>('circle');
@@ -11,7 +11,6 @@ export class DrawingService {
   private undoSource = new Subject<any[]>();
   private redoSource = new Subject<any[]>();
 
-  // Observables that the Board will subscribe to
   currentTool$ = this.toolSource.asObservable();
   currentColor$ = this.colorSource.asObservable();
   undo$ = this.undoSource.asObservable();
@@ -30,6 +29,6 @@ export class DrawingService {
   }
 
   redo() {
-    this.redoSource.next([])
+    this.redoSource.next([]);
   }
 }
