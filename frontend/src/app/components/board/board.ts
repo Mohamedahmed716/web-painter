@@ -31,7 +31,16 @@ export class BoardComponent implements AfterViewInit {
     this.drawingService.currentColor$.subscribe((color) => (this.currentColor = color));
     this.drawingService.undo$.subscribe(() => this.undo());
     this.drawingService.redo$.subscribe(() => this.redo());
+   
+    this.drawingService.shapes$.subscribe((newShapes) => {
+        console.log("Board: New shapes received via Load/Refresh", newShapes);
+        this.shapes = newShapes;
+        this.redrawAll();
+    });
+
     this.refreshBoard();
+  
+    
   }
 
   onMouseDown($event: MouseEvent) {

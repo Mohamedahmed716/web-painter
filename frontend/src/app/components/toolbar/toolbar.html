@@ -15,11 +15,19 @@
         <span class="material-symbols-outlined">save</span>
         Save
       </button>
+
       <div class="dropdown-menu" [class.show]="isDropdownOpen">
-        <a href="#" (click)="saveFile('json'); $event.preventDefault()">Save as JSON</a>
-        <a href="#" (click)="saveFile('xml'); $event.preventDefault()">Save as XML</a>
+        <a href="#" (click)="$event.preventDefault(); onSaveClick('json')">Save as JSON</a>
+        <a href="#" (click)="$event.preventDefault(); onSaveClick('xml')">Save as XML</a>
       </div>
     </div>
+
+    <button class="dropdown-btn" (click)="fileInput.click()">
+      <span class="material-symbols-outlined">folder_open</span>
+      Load
+    </button>
+
+    <input #fileInput type="file" (change)="onFileSelected($event)" style="display: none" accept=".json,.xml">
   </div>
 </div>
 <div class="controls">
@@ -39,13 +47,8 @@
 </div>
 <div class="main-area">
   <div class="toolbar">
-    <button
-      *ngFor="let tool of tools"
-      class="tool-btn"
-      [class.selected]="tool.id === activeTool"
-      [title]="tool.label"
-      (click)="selectTool(tool.id)"
-    >
+    <button *ngFor="let tool of tools" class="tool-btn" [class.selected]="tool.id === activeTool" [title]="tool.label"
+      (click)="selectTool(tool.id)">
       {{ tool.icon }}
     </button>
   </div>

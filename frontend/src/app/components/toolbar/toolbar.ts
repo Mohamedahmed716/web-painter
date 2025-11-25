@@ -92,9 +92,64 @@ export class ToolbarComponent {
       this.isDropdownOpen = false;
     }
   }
-
-  saveFile(format: string) {
-    console.log('Saving as', format);
+  onSaveClick(format: 'json' | 'xml') {
     this.isDropdownOpen = false;
+    this.save(format);
+  }
+
+  async save(format: 'json' | 'xml') {
+    this.drawingService.saveFile(format).subscribe({
+      next: async (blob: Blob) => {
+        // --- الخطة (أ): المحاولة باستخدام الطريقة الحديثة ---
+        try {
+          // @ts-ignore: عشان التايب سكريبت ميعترضش على الميزة الجديدة دي
+          if (window.showSaveFilePicker) {
+            // 1. اطلب من المستخدم يختار مكان واسم الملف
+            // @ts-ignore
+            const handle = await window.showSaveFilePicker({
+              suggestedName: `drawing.${format}`,
+              types: [
+                {
+                  description: `${format.toUpperCase()} File`,
+                  accept: { [format === 'json' ? 'application/json' : 'text/xml']: [`.${format}`] },
+                },
+              ],
+            });
+
+            // 2. اكتب الداتا جوه الملف اللي اختاره
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+
+            alert('File saved successfully!');
+            return; // اخرج من الدالة لو نجحنا (عشان منروحش للخطة ب)
+          }
+        } catch (err: any) {
+          // لو المستخدم داس Cancel في النافذة، مفيش داعي نكمل
+          if (err.name === 'AbortError') return;
+          console.warn('File System Access API not supported or failed, falling back to download.');
+        }
+
+        // --- الخطة (ب): الطريقة القديمة (Fallback) ---
+        // دي هتشتغل لو المتصفح قديم أو مش بيدعم الخاصية دي (زي Firefox)
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `drawing.${format}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => alert('Error fetching file from server'),
+    });
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+
+    if (file) {
+      this.drawingService.loadFile(file);
+    }
+
+    event.target.value = '';
   }
 }
