@@ -3,6 +3,6 @@ body {
   padding: 0;
   height: 100vh;
   width: 100vw;
-  overflow: hidden;
+  overflow: hidden; /* CRITICAL: Disables scrolling */
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }

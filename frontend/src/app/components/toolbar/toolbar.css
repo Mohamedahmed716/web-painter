@@ -1,6 +1,8 @@
-/* toolbar.css */
-
-/* --- HEADER (Top Row) --- */
+:host {
+  display: block;
+  width: 100%;
+  z-index: 100;
+}
 .header {
   height: 50px;
   background-color: #ffffff;
