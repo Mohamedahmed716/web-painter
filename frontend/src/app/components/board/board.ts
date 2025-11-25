@@ -39,9 +39,11 @@ export class BoardComponent implements AfterViewInit {
     this.startX = $event.offsetX;
     this.startY = $event.offsetY;
 
-    if (this.currentTool === 'freehand') {
+    if (this.currentTool === 'freehand' ) {
       this.freehandPoints = [{ x: this.startX, y: this.startY }];
     }
+
+
   }
 
   onMouseMove($event: MouseEvent) {
