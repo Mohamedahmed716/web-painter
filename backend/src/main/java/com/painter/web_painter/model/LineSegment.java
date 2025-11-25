@@ -15,9 +15,9 @@ public class LineSegment extends Shape {
     }
 
     private LineSegment(LineSegment target) {
-        super(UUID.randomUUID().toString(), target.x + 10, target.y + 10, target.color, "transparent");
-        this.x2 = target.x2 + 10;
-        this.y2 = target.y2 + 10;
+        super(UUID.randomUUID().toString(), target.x, target.y, target.color, "transparent");
+        this.x2 = target.x2;
+        this.y2 = target.y2;
     }
 
     @Override

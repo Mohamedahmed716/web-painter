@@ -13,7 +13,7 @@ public class Square extends Shape {
     }
 
     private Square(Square target) {
-        super(UUID.randomUUID().toString(), target.x + 10, target.y + 10, target.color, target.fillColor);
+        super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
         this.sideLength = target.sideLength;
     }
 
