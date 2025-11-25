@@ -53,7 +53,7 @@ public class PaintController {
     }
 
 
-    @GetMapping("/save/json")
+    @GetMapping("files/save/json")
     public ResponseEntity<byte[]> saveJson() {
         try {
             String json = paintService.SavetoJson();
@@ -68,7 +68,7 @@ public class PaintController {
         }
     }
 
-    @GetMapping("/save/xml")
+    @GetMapping("/files/save/xml")
     public ResponseEntity<byte[]> saveXml() {
         try {
             String xml = paintService.SavetoXml();
@@ -84,7 +84,7 @@ public class PaintController {
     }
 
     // Load File
-    @PostMapping("/load")
+    @PostMapping("/files/load")
     public ResponseEntity<String> loadFile(@RequestParam("file") MultipartFile file) {
         try {
             paintService.loadFromFile(file);

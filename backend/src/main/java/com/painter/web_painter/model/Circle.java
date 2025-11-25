@@ -6,15 +6,19 @@ import java.util.UUID;
 public class Circle extends Shape {
     private double radius;
 
-    public Circle() {} // Empty constructor for JSON
+    public Circle() {
+        this.setType("circle");
+    } // Empty constructor for JSON
 
     public Circle(double x, double y, double radius, String color, String fillColor) {
         super(UUID.randomUUID().toString(), x, y, color, fillColor);
         this.radius = radius;
+        this.setType("circle");
     }
     private Circle(Circle target) {
         super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
         this.radius = target.radius;
+        this.setType("circle");
     }
 
     @Override

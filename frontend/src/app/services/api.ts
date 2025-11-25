@@ -25,6 +25,7 @@ export class ApiService {
     );
   }
 
+
   undo(): Observable<Shape[]> {
     return this.http.post<any[]>(`${this.baseUrl}/undo`, {}).pipe(
       map(data => this.parsing.parse(data))
@@ -35,5 +36,19 @@ export class ApiService {
     return this.http.post<any[]>(`${this.baseUrl}/redo`, {}).pipe(
       map(data => this.parsing.parse(data))
     );
+  }
+  downloadFile(format: 'json' | 'xml'): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/files/save/${format}`, {
+      responseType: 'blob' 
+    });
+  }
+
+  uploadFile(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post(`${this.baseUrl}/files/load`, formData, {
+      responseType: 'text'
+    });
   }
 }

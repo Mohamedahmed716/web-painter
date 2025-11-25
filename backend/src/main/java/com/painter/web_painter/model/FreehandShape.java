@@ -9,11 +9,17 @@ public class FreehandShape extends Shape {
     // A list of maps, where each map is {x: 10, y: 20}
     private List<Map<String, Double>> points = new ArrayList<>();
 
-    public FreehandShape() {}
+    public FreehandShape() {
+        this.setType("freehand");
+
+    }
 
     public FreehandShape(List<Map<String, Double>> points, String color, String fillColor) {
         super(UUID.randomUUID().toString(), 0, 0, color, fillColor); // x,y don't matter much here
         this.points = points;
+        this.setType("freehand");
+
+
     }
 
     // Prototype Pattern
@@ -21,6 +27,8 @@ public class FreehandShape extends Shape {
         super(UUID.randomUUID().toString(), target.x + 10, target.y + 10, target.color, target.fillColor);
         // Deep copy the points list
         this.points = new ArrayList<>(target.points);
+        this.setType("freehand");
+
     }
 
     @Override

@@ -6,12 +6,15 @@ public class Ellipse extends Shape {
     private double radiusX;
     private double radiusY;
 
-    public Ellipse() {}
+    public Ellipse() {
+        this.setType("ellipse");
+    }
 
     public Ellipse(double centerX, double centerY, double radiusX, double radiusY, String color, String fillColor) {
         super(UUID.randomUUID().toString(), centerX, centerY, color, fillColor);
         this.radiusX = radiusX;
         this.radiusY = radiusY;
+        this.setType("ellipse");
     }
 
     // Prototype Pattern Constructor
@@ -19,6 +22,7 @@ public class Ellipse extends Shape {
         super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
         this.radiusX = target.radiusX;
         this.radiusY = target.radiusY;
+        this.setType("ellipse");
     }
 
     @Override
