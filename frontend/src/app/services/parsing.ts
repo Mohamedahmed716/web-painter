@@ -36,8 +36,8 @@ export class Parsing {
 
       case 'rectangle':
       case 'square':
-        shape.width = item.width;
-        shape.height = item.height;
+        shape.width = item.sideLength;
+        shape.height = item.sideLength;
         break;
 
       case 'ellipse':

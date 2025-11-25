@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -20,16 +21,22 @@ public class PaintController {
     @Autowired
     private PaintService paintService;
     private ShapeFactory factory;
+    public PaintController(ShapeFactory factory, PaintService paintService) {
+        this.factory = factory;
+        this.paintService = paintService;
+    }
 
     @GetMapping("/shapes")
     public ResponseEntity<List<Shape>> getAllShapes() {
-        // Wrap the list in a "200 OK" response
         return ResponseEntity.ok(paintService.getShapes());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<List<Shape>> createShape(@RequestBody Shape shape) {
-        paintService.addShape(shape);
+    public ResponseEntity<List<Shape>> createShape(@RequestBody Map<String, Object> payload) {
+        String type = (String) payload.get("type");
+        Map<String, Object> params = (Map<String, Object>) payload.get("params");
+        Shape s = factory.createShape(type, params);
+        paintService.addShape(s);
         return ResponseEntity.ok(paintService.getShapes());
     }
 
