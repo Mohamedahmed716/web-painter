@@ -100,4 +100,43 @@ public class PaintController {
             return ResponseEntity.badRequest().body("Error loading file: " + e.getMessage());
         }
     }
+    // PaintController.java
+
+    @PostMapping("/select")
+    public ResponseEntity<List<Shape>> selectShape(@RequestBody Map<String, Object> payload) {
+        double x = ((Number) payload.get("x")).doubleValue();
+        double y = ((Number) payload.get("y")).doubleValue();
+        paintService.selectShapeAt(x, y);
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/move")
+    public ResponseEntity<List<Shape>> moveSelected(@RequestBody Map<String, Object> payload) {
+        double dx = ((Number) payload.get("dx")).doubleValue();
+        double dy = ((Number) payload.get("dy")).doubleValue();
+        paintService.moveSelected(dx, dy);
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/resize")
+    public ResponseEntity<List<Shape>> resizeSelected(@RequestBody Map<String, Object> payload) {
+        String anchor = (String) payload.get("anchor");
+        double dx = ((Number) payload.get("dx")).doubleValue();
+        double dy = ((Number) payload.get("dy")).doubleValue();
+        paintService.resizeSelected(anchor, dx, dy);
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/copy")
+    public ResponseEntity<List<Shape>> copySelected() {
+        paintService.copySelected();
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/delete")
+    public ResponseEntity<List<Shape>> deleteSelected() {
+        paintService.deleteSelected();
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
 }
