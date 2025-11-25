@@ -17,9 +17,8 @@ import com.painter.web_painter.model.Shape;
 @Service
 public class PaintService {
     private List<Shape> shapes = new ArrayList<>();
-
-    Stack<List<Shape>> undoStack = new Stack<>();
-    Stack<List<Shape>> redoStack = new Stack<>();
+    private Stack<List<Shape>> undoStack = new Stack<>();
+    private Stack<List<Shape>> redoStack = new Stack<>();
 
     public List<Shape> getShapes() {
         return shapes;
@@ -51,37 +50,25 @@ public class PaintService {
         stack.push(snapshot);
     }
 
-    public void copyShape(int index) {
-        if (index < 0 || index >= shapes.size()) return;
-
-        deepCopy(undoStack);
-
-        Shape original = shapes.get(index);
-        Shape copy = original.clone();
-
-        // offset dimensions
-
-        shapes.add(copy);
-        redoStack.clear();
-    }
-
     public void clearBoard() {
         deepCopy(undoStack);
         shapes.clear();
         redoStack.clear();
     }
-    public String SavetoJson() throws IOException{
+
+    public String SavetoJson() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(shapes);
     }
-    public String SavetoXml() throws IOException{
+
+    public String SavetoXml() throws IOException {
         XmlMapper mapper = new XmlMapper();
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(shapes);
     }
+
     public void loadFromFile(MultipartFile file) throws IOException {
         String content = new String(file.getBytes());
         String fileName = file.getOriginalFilename();
-
         List<Shape> loadedShapes;
 
         if (fileName != null && fileName.endsWith(".xml")) {
@@ -93,6 +80,8 @@ public class PaintService {
         }
 
         this.clearBoard();
-        this.shapes.addAll(loadedShapes);
+        if (loadedShapes != null) {
+            this.shapes.addAll(loadedShapes);
+        }
     }
 }

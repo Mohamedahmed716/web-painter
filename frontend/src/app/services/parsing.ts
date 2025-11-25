@@ -5,28 +5,26 @@ import { Shape } from '../models/shape';
   providedIn: 'root',
 })
 export class Parsing {
-
   parse(rawJson: any[]): Shape[] {
     if (!rawJson || !Array.isArray(rawJson)) {
       console.warn('Backend returned invalid shape data:', rawJson);
       return [];
     }
-
-    return rawJson.map(item => this.convertSingleShape(item));
+    return rawJson.map((item) => this.convertSingleShape(item));
   }
 
   private convertSingleShape(item: any): Shape {
-
     const shape: Shape = {
       type: item.type,
       id: item.id,
       x: item.x,
       y: item.y,
       color: item.color,
+      fillColor: item.fillColor, // Ensure fill is carried over
 
       radius: undefined,
       width: undefined,
-      height: undefined
+      height: undefined,
     };
 
     switch (item.type) {
@@ -38,6 +36,7 @@ export class Parsing {
         shape.width = item.width;
         shape.height = item.height;
         break;
+
       case 'square':
         shape.width = item.sideLength;
         shape.height = item.sideLength;
@@ -58,6 +57,9 @@ export class Parsing {
         (shape as any).y2 = item.y2;
         (shape as any).x3 = item.x3;
         (shape as any).y3 = item.y3;
+        break;
+      case 'freehand':
+        (shape as any).points = item.points;
         break;
     }
 

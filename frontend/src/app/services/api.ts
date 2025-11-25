@@ -6,7 +6,7 @@ import { Shape } from '../models/shape';
 import { Parsing } from './parsing';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
   private http = inject(HttpClient);
@@ -14,26 +14,26 @@ export class ApiService {
   private baseUrl = 'http://localhost:8080/api';
 
   getShapes(): Observable<Shape[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/shapes`).pipe(
-      map(data => this.parsing.parse(data))
-    );
+    return this.http
+      .get<any[]>(`${this.baseUrl}/shapes`)
+      .pipe(map((data) => this.parsing.parse(data)));
   }
 
   createShape(type: string, params: any): Observable<Shape[]> {
-    return this.http.post<any[]>(`${this.baseUrl}/create`, { type, params }).pipe(
-      map(data => this.parsing.parse(data))
-    );
+    return this.http
+      .post<any[]>(`${this.baseUrl}/create`, { type, params })
+      .pipe(map((data) => this.parsing.parse(data)));
   }
 
   undo(): Observable<Shape[]> {
-    return this.http.post<any[]>(`${this.baseUrl}/undo`, {}).pipe(
-      map(data => this.parsing.parse(data))
-    );
+    return this.http
+      .post<any[]>(`${this.baseUrl}/undo`, {})
+      .pipe(map((data) => this.parsing.parse(data)));
   }
 
   redo(): Observable<Shape[]> {
-    return this.http.post<any[]>(`${this.baseUrl}/redo`, {}).pipe(
-      map(data => this.parsing.parse(data))
-    );
+    return this.http
+      .post<any[]>(`${this.baseUrl}/redo`, {})
+      .pipe(map((data) => this.parsing.parse(data)));
   }
 }
