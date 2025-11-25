@@ -1,11 +1,13 @@
 package com.painter.web_painter.Service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
 import com.painter.web_painter.model.Circle;
 import com.painter.web_painter.model.Ellipse;
+import com.painter.web_painter.model.FreehandShape;
 import com.painter.web_painter.model.LineSegment;
 import com.painter.web_painter.model.Rectangle;
 import com.painter.web_painter.model.Shape;
@@ -68,6 +70,10 @@ public class ShapeFactory {
 
             case "line":
                 return new LineSegment(x1, y1, x2, y2, color);
+
+            case "freehand":
+            List<Map<String, Double>> points = (List<Map<String, Double>>) params.get("points");
+            return new FreehandShape(points, color, fillColor);    
             
             default:
                 throw new IllegalArgumentException("Unknown shape type: " + type);
