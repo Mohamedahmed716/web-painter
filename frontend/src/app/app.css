@@ -1,14 +1,6 @@
-.app-container{
+.app-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   height: 100vh;
-}
-.app-container{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+  width: 100vw;
 }

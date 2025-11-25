@@ -1,7 +1,41 @@
-<div class="toolbar">
+<div class="header">
+    <div class="header-left">
+      <h1 class="app-name">PaintMaster</h1>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn"><span class="material-symbols-outlined">undo</span></button>
+      <button class="icon-btn"><span class="material-symbols-outlined">redo</span></button>
 
-  <div class="group-label">Shapes</div>
-  <div class="tools-container">
+      <div class="dropdown">
+        <button class="dropdown-btn">
+          <span class="material-symbols-outlined">save</span>
+          Save
+        </button>
+
+        <div class="dropdown-menu">
+          <a href="#">Save as JSON</a>
+          <a href="#">Save as XML</a>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="controls">
+        <div class="color-group">
+          <label>Stroke</label>
+          <input type="color" value="#333333" class="color-input">
+        </div>
+        <div class="color-group">
+          <label>Fill</label>
+          <input type="color" value="#ffffff" class="color-input">
+        </div>
+        <div class="width-group">
+          <span>Width</span>
+          <input type="range" min="0" max="100" value="25" class="slider">
+          <span class="width-value">2px</span>
+        </div>
+</div>
+  <div class="main-area">
+    <div class="toolbar">
     <button *ngFor="let tool of tools"
             class="tool-btn"
             [class.selected]="tool.id === activeTool"
@@ -10,17 +44,4 @@
       {{ tool.icon }}
     </button>
   </div>
-
-  <div class="separator"></div>
-
-  <div class="group-label">Colors</div>
-  <div class="palette-container">
-    <div *ngFor="let color of colors"
-         class="color-swatch"
-         [style.background-color]="color"
-         [class.selected]="color === activeColor"
-         (click)="selectColor(color)">
-    </div>
   </div>
-
-</div>

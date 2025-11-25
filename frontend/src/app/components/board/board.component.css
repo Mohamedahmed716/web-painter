@@ -1,24 +1,16 @@
-/* Styles for the board component */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
-  margin: 0;
-  padding: 0;
-}
 .board-container {
-  position: relative;
+  flex-grow: 1;
+  width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 20px;
-  height: 100vh;
+  align-items: center;
+  background-color: #f5f5f5;
+  position: relative;
+  overflow: hidden;
 }
 
 canvas {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   background-color: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
   cursor: crosshair;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
