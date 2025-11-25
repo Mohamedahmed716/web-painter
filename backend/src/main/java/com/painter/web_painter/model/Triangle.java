@@ -18,11 +18,11 @@ public class Triangle extends Shape {
     }
 
     private Triangle(Triangle target) {
-        super(UUID.randomUUID().toString(), target.x + 10, target.y + 10, target.color, target.fillColor);
-        this.x2 = target.x2 + 10;
-        this.y2 = target.y2 + 10;
-        this.x3 = target.x3 + 10;
-        this.y3 = target.y3 + 10;
+        super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
+        this.x2 = target.x2;
+        this.y2 = target.y2;
+        this.x3 = target.x3;
+        this.y3 = target.y3;
     }
 
     @Override

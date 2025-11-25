@@ -13,7 +13,7 @@ public class Circle extends Shape {
         this.radius = radius;
     }
     private Circle(Circle target) {
-        super(UUID.randomUUID().toString(), target.x + 10, target.y + 10, target.color, target.fillColor);
+        super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
         this.radius = target.radius;
     }
 

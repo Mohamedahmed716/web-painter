@@ -15,7 +15,7 @@ public class Rectangle extends Shape {
     }
 
     private Rectangle(Rectangle target) {
-        super(UUID.randomUUID().toString(), target.x + 10, target.y + 10, target.color, target.fillColor);
+        super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
         this.width = target.width;
         this.height = target.height;
     }

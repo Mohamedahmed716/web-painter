@@ -16,7 +16,7 @@ public class Ellipse extends Shape {
 
     // Prototype Pattern Constructor
     private Ellipse(Ellipse target) {
-        super(UUID.randomUUID().toString(), target.x + 10, target.y + 10, target.color, target.fillColor);
+        super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
         this.radiusX = target.radiusX;
         this.radiusY = target.radiusY;
     }

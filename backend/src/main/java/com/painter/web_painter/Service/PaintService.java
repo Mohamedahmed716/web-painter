@@ -59,8 +59,7 @@ public class PaintService {
         Shape original = shapes.get(index);
         Shape copy = original.clone();
 
-        copy.setX(original.getX() + 20);
-        copy.setY(original.getY() + 20);
+        // offset dimensions
 
         shapes.add(copy);
         redoStack.clear();

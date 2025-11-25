@@ -35,6 +35,9 @@ export class Parsing {
         break;
 
       case 'rectangle':
+        shape.width = item.width;
+        shape.height = item.height;
+        break;
       case 'square':
         shape.width = item.sideLength;
         shape.height = item.sideLength;
