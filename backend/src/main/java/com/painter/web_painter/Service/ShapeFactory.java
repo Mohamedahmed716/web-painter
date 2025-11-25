@@ -1,7 +1,5 @@
 package com.painter.web_painter.Service;
 
-
-
 import java.util.Map;
 
 import org.springframework.stereotype.Component;

@@ -1,5 +1,7 @@
 package com.painter.web_painter.controller;
 import com.painter.web_painter.Service.PaintService;
+import com.painter.web_painter.Service.ShapeFactory;
+import com.painter.web_painter.model.Shape;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -9,13 +11,40 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api")
 @CrossOrigin
 public class PaintController {
     @Autowired
     private PaintService paintService;
+    private ShapeFactory factory;
+
+    @GetMapping("/shapes")
+    public ResponseEntity<List<Shape>> getAllShapes() {
+        // Wrap the list in a "200 OK" response
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<List<Shape>> createShape(@RequestBody Shape shape) {
+        paintService.addShape(shape);
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/undo")
+    public ResponseEntity<List<Shape>> undoShape() {
+        paintService.undo();
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/redo")
+    public ResponseEntity<List<Shape>> redoShape() {
+        paintService.redo();
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
 
     @GetMapping("/save/json")
     public ResponseEntity<byte[]> saveJson() {
