@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DrawingService } from '../../services/drawing';
 
@@ -7,25 +7,31 @@ import { DrawingService } from '../../services/drawing';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './toolbar.html',
-  styleUrls: ['./toolbar.css']
+  styleUrls: ['./toolbar.css'],
 })
 export class ToolbarComponent {
   private drawingService = inject(DrawingService);
 
-  // 1. Define Tools with Labels (Unicode icons)
   tools = [
     { id: 'line', icon: '╱', label: 'Line' },
     { id: 'circle', icon: '○', label: 'Circle' },
     { id: 'rectangle', icon: '▭', label: 'Rectangle' },
     { id: 'square', icon: '□', label: 'Square' },
     { id: 'triangle', icon: '△', label: 'Triangle' },
-    { id: 'ellipse', icon: '⬭', label: 'Ellipse' }
+    { id: 'ellipse', icon: '⬭', label: 'Ellipse' },
   ];
 
-  // 2. Define Colors
-  colors: string[] = ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FFA500', '#800080', '#FFFFFF'];
+  colors: string[] = [
+    '#000000',
+    '#FF0000',
+    '#00FF00',
+    '#0000FF',
+    '#FFFF00',
+    '#FFA500',
+    '#800080',
+    '#FFFFFF',
+  ];
 
-  // State
   activeTool: string = 'line';
   activeColor: string = '#000000';
 
@@ -38,12 +44,33 @@ export class ToolbarComponent {
     this.activeColor = color;
     this.drawingService.setColor(color);
   }
-  undo(){
+  undo() {
     this.drawingService.undo();
   }
 
-  redo(){
+  redo() {
     this.drawingService.redo();
   }
 
+  private elementRef = inject(ElementRef);
+
+  isDropdownOpen = false;
+
+  toggleDropdown() {
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: MouseEvent) {
+    if (!this.isDropdownOpen) return;
+    const clickedInside = this.elementRef.nativeElement.contains(event.target);
+    if (!clickedInside) {
+      this.isDropdownOpen = false;
+    }
+  }
+
+  saveFile(format: string) {
+    console.log('Saving as', format);
+    this.isDropdownOpen = false;
+  }
 }

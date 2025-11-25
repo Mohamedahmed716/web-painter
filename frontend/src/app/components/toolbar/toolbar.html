@@ -1,47 +1,52 @@
 <div class="header">
-    <div class="header-left">
-      <h1 class="app-name">PaintMaster</h1>
-    </div>
-    <div class="header-right">
-      <button class="icon-btn" (click)="undo()"><span class="material-symbols-outlined">undo</span></button>
-      <button class="icon-btn" (click)="redo()"><span class="material-symbols-outlined">redo</span></button>
+  <div class="header-left">
+    <h1 class="app-name">PaintMaster</h1>
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" (click)="undo()">
+      <span class="material-symbols-outlined">undo</span>
+    </button>
+    <button class="icon-btn" (click)="redo()">
+      <span class="material-symbols-outlined">redo</span>
+    </button>
 
-      <div class="dropdown">
-        <button class="dropdown-btn">
-          <span class="material-symbols-outlined">save</span>
-          Save
-        </button>
-
-        <div class="dropdown-menu">
-          <a href="#">Save as JSON</a>
-          <a href="#">Save as XML</a>
-        </div>
+    <div class="dropdown">
+      <button class="dropdown-btn" (click)="$event.stopPropagation(); toggleDropdown()">
+        <span class="material-symbols-outlined">save</span>
+        Save
+      </button>
+      <div class="dropdown-menu" [class.show]="isDropdownOpen">
+        <a href="#" (click)="saveFile('json'); $event.preventDefault()">Save as JSON</a>
+        <a href="#" (click)="saveFile('xml'); $event.preventDefault()">Save as XML</a>
       </div>
     </div>
   </div>
-    <div class="controls">
-        <div class="color-group">
-          <label>Stroke</label>
-          <input type="color" value="#333333" class="color-input">
-        </div>
-        <div class="color-group">
-          <label>Fill</label>
-          <input type="color" value="#ffffff" class="color-input">
-        </div>
-        <div class="width-group">
-          <span>Width</span>
-          <input type="range" min="0" max="100" value="25" class="slider">
-          <span class="width-value">2px</span>
-        </div>
 </div>
-  <div class="main-area">
-    <div class="toolbar">
-    <button *ngFor="let tool of tools"
-            class="tool-btn"
-            [class.selected]="tool.id === activeTool"
-            [title]="tool.label"
-            (click)="selectTool(tool.id)">
+<div class="controls">
+  <div class="color-group">
+    <label>Stroke</label>
+    <input type="color" value="#333333" class="color-input" />
+  </div>
+  <div class="color-group">
+    <label>Fill</label>
+    <input type="color" value="#ffffff" class="color-input" />
+  </div>
+  <div class="width-group">
+    <span>Width</span>
+    <input type="range" min="0" max="100" value="25" class="slider" />
+    <span class="width-value">2px</span>
+  </div>
+</div>
+<div class="main-area">
+  <div class="toolbar">
+    <button
+      *ngFor="let tool of tools"
+      class="tool-btn"
+      [class.selected]="tool.id === activeTool"
+      [title]="tool.label"
+      (click)="selectTool(tool.id)"
+    >
       {{ tool.icon }}
     </button>
   </div>
-  </div>
+</div>
