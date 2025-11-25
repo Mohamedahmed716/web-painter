@@ -1,18 +1,22 @@
 import { Component, inject, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DrawingService } from '../../services/drawing';
 
 @Component({
   selector: 'app-toolbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './toolbar.html',
   styleUrls: ['./toolbar.css'],
 })
 export class ToolbarComponent {
   private drawingService = inject(DrawingService);
+  private elementRef = inject(ElementRef);
 
+  // Added 'freehand' tool to the list
   tools = [
+    { id: 'freehand', icon: '✎', label: 'Freehand' }, // The new cursor tool
     { id: 'line', icon: '╱', label: 'Line' },
     { id: 'circle', icon: '○', label: 'Circle' },
     { id: 'rectangle', icon: '▭', label: 'Rectangle' },
@@ -34,16 +38,35 @@ export class ToolbarComponent {
 
   activeTool: string = 'line';
   activeColor: string = '#000000';
+  strokeColor: string = '#333333';
+  fillColor: string = '#ffffff';
+  strokeWidth: number = 2;
+
+  // State
+  isDropdownOpen = false;
 
   selectTool(toolId: string) {
-    this.activeTool = toolId; // Update local state for UI highlighting
-    this.drawingService.setTool(toolId); // Update Service
+    this.activeTool = toolId;
+    this.drawingService.setTool(toolId);
   }
 
-  selectColor(color: string) {
-    this.activeColor = color;
-    this.drawingService.setColor(color);
+  // --- Properties Logic ---
+  onStrokeColorChange() {
+    this.activeColor = this.strokeColor;
+    this.drawingService.setColor(this.strokeColor);
   }
+
+  onFillColorChange() {
+    // Implement fill logic in service if needed
+    console.log('Fill color changed:', this.fillColor);
+  }
+
+  onPropertyChange(prop: string, value: any) {
+    console.log('Property changed:', prop, value);
+    // You can extend DrawingService to handle width
+  }
+
+  // --- Actions ---
   undo() {
     this.drawingService.undo();
   }
@@ -52,10 +75,11 @@ export class ToolbarComponent {
     this.drawingService.redo();
   }
 
-  private elementRef = inject(ElementRef);
+  triggerAction(action: string) {
+    console.log('Action triggered:', action);
+  }
 
-  isDropdownOpen = false;
-
+  // --- Dropdown Logic ---
   toggleDropdown() {
     this.isDropdownOpen = !this.isDropdownOpen;
   }
