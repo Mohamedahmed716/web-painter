@@ -38,4 +38,12 @@ export class ToolbarComponent {
     this.activeColor = color;
     this.drawingService.setColor(color);
   }
+  undo(){
+    this.drawingService.undo();
+  }
+
+  redo(){
+    this.drawingService.redo();
+  }
+
 }

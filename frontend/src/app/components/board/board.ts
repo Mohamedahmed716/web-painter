@@ -169,4 +169,24 @@ export class BoardComponent implements AfterViewInit {
     this.ctx.stroke();
     this.ctx.setLineDash([]);
   }
+
+  undo(){
+    this.apiService.undo().subscribe({
+      next: (shapes) => {
+        this.shapes = shapes;
+        this.refreshBoard();
+      },
+      error: (err) => console.error('Error performing undo', err),
+    });
+  }
+
+  redo(){
+    this.apiService.redo().subscribe({
+      next: (shapes) => {
+        this.shapes = shapes;
+        this.refreshBoard();
+      },
+      error: (err) => console.error('Error performing redo', err),
+    });
+  }
 }
