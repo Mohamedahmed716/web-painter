@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, 
     include = JsonTypeInfo.As.PROPERTY, 
-    property = "type"
+    property = "type",
+        visible = true
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = Circle.class, name = "circle"),
@@ -19,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 })
 public abstract class Shape implements Cloneable {
-    
+    protected String type;
     protected String id;
     protected double x;
     protected double y;
@@ -37,6 +38,14 @@ public abstract class Shape implements Cloneable {
     }
 
     public abstract Shape clone();
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

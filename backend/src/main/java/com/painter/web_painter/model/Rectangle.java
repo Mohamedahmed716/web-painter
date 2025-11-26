@@ -6,18 +6,23 @@ public class Rectangle extends Shape {
     private double width;
     private double height;
 
-    public Rectangle() {}
+    public Rectangle() {
+        this.setType("rectangle");
+    }
 
     public Rectangle(double x, double y, double width, double height, String color, String fillColor) {
         super(UUID.randomUUID().toString(), x, y, color, fillColor);
         this.width = width;
         this.height = height;
+        this.setType("rectangle");
     }
 
     private Rectangle(Rectangle target) {
         super(UUID.randomUUID().toString(), target.x, target.y, target.color, target.fillColor);
         this.width = target.width;
         this.height = target.height;
+        this.setType("rectangle");
+        
     }
 
     @Override

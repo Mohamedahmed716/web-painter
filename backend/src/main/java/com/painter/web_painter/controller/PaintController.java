@@ -8,13 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.painter.web_painter.Service.PaintService;
@@ -63,7 +57,8 @@ public class PaintController {
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    @GetMapping("/save/json")
+
+    @GetMapping("files/save/json")
     public ResponseEntity<byte[]> saveJson() {
         try {
             String json = paintService.SavetoJson();
@@ -77,7 +72,7 @@ public class PaintController {
         }
     }
 
-    @GetMapping("/save/xml")
+    @GetMapping("/files/save/xml")
     public ResponseEntity<byte[]> saveXml() {
         try {
             String xml = paintService.SavetoXml();
@@ -91,7 +86,8 @@ public class PaintController {
         }
     }
 
-    @PostMapping("/load")
+    // Load File
+    @PostMapping("/files/load")
     public ResponseEntity<String> loadFile(@RequestParam("file") MultipartFile file) {
         try {
             paintService.loadFromFile(file);
