@@ -156,6 +156,13 @@ public class PaintService {
         }
     }
 
+    public void clearBoard() {
+        saveStateToUndo();
+        shapes.clear();
+        redoStack.clear();
+        selectedShapeId = null;
+    }
+
     private void moveShape(Shape s, double dx, double dy) {
         if (s instanceof Rectangle) { ((Rectangle)s).setX(((Rectangle)s).getX() + dx); ((Rectangle)s).setY(((Rectangle)s).getY() + dy); }
         else if (s instanceof Circle) { ((Circle)s).setX(((Circle)s).getX() + dx); ((Circle)s).setY(((Circle)s).getY() + dy); }
@@ -224,12 +231,6 @@ public class PaintService {
              return px >= minX && px <= maxX && py >= minY && py <= maxY;
         }
         return true; 
-    }
-
-    public void clearBoard() {
-        saveStateToUndo();
-        shapes.clear();
-        redoStack.clear();
     }
 
     public String SavetoJson() throws IOException {

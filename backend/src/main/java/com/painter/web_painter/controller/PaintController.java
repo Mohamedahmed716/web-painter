@@ -129,6 +129,12 @@ public class PaintController {
         paintService.deleteSelected(); 
         return ResponseEntity.ok(paintService.getShapes()); 
     }
+    
+    @PostMapping("/clear")
+    public ResponseEntity<List<Shape>> clear() { 
+        paintService.clearBoard(); 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
 
     @PostMapping("/resize")
     public ResponseEntity<List<Shape>> resize(@RequestBody Map<String, Object> p) {

@@ -18,11 +18,15 @@
     <button class="tool-btn" title="Resize" (click)="resizeSelected()">↔️</button>
     <button class="tool-btn" title="Copy" (click)="copySelected()">📄</button>
 
+    <!-- NEW: Delete All Button -->
+    <button class="tool-btn" title="Clear Board" (click)="deleteAll()" style="color: red">
+      ❌
+    </button>
+
     <!-- Save Dropdown -->
     <div class="dropdown" (click)="$event.stopPropagation(); toggleDropdown()">
       <button class="dropdown-btn"><span class="material-symbols-outlined">save</span> Save</button>
       <div class="dropdown-menu" [class.show]="isDropdownOpen">
-        <!-- Prevent default link behavior and call TS function -->
         <a href="#" (click)="$event.preventDefault(); saveFile('json')">Save as JSON</a>
         <a href="#" (click)="$event.preventDefault(); saveFile('xml')">Save as XML</a>
       </div>
@@ -43,6 +47,15 @@
       type="color"
       [(ngModel)]="strokeColor"
       (change)="onStrokeColorChange()"
+      class="color-input"
+    />
+  </div>
+  <div class="color-group">
+    <label>Fill</label>
+    <input
+      type="color"
+      [(ngModel)]="fillColor"
+      (change)="onFillColorChange()"
       class="color-input"
     />
   </div>

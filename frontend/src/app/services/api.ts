@@ -94,16 +94,16 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/save/${format}`, { responseType: 'blob' });
   }
 
+  deleteAll(): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/clear`, {})
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
+
   load(file: File) {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post(`${this.baseUrl}/load`, formData, { responseType: 'text' });
-  }
-
-  pasteSelected(x: number, y: number): Observable<Shape[]> {
-    return this.http
-      .post<any[]>(`${this.baseUrl}/paste`, { x, y })
-      .pipe(map((d) => this.parsing.parse(d)));
   }
   // NEW: Update Fill Color
   updateFillColor(color: string): Observable<Shape[]> {

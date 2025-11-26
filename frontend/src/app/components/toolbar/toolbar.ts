@@ -122,4 +122,12 @@ export class ToolbarComponent {
       this.drawingService.colorChange$.next(shapes);
     });
   }
+
+  deleteAll() {
+    if (confirm('Are you sure you want to clear the board?')) {
+      this.api.deleteAll().subscribe((shapes) => {
+        this.drawingService.colorChange$.next(shapes); // Reuse this subject to trigger redraw with empty list
+      });
+    }
+  }
 }
