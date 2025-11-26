@@ -39,7 +39,6 @@ export class BoardComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     this.ctx = this.canvasRef.nativeElement.getContext('2d')!;
 
-    // --- Subscriptions ---
     this.drawingService.currentTool$.subscribe((tool) => (this.currentTool = tool));
     this.drawingService.currentColor$.subscribe((color) => (this.currentColor = color));
     this.drawingService.undo$.subscribe(() => this.undo());
@@ -52,7 +51,6 @@ export class BoardComponent implements AfterViewInit {
       this.isPasting = true;
     });
 
-    // CRITICAL: When fill/stroke changes, update shapes and redraw
     this.drawingService.colorChange$.subscribe((shapes) => {
       this.shapes = shapes;
       this.redrawAll();
@@ -237,14 +235,11 @@ export class BoardComponent implements AfterViewInit {
     });
   }
 
-  // --- DRAWING LOGIC ---
-
   drawShape(s: Shape) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = s.color;
     this.ctx.lineWidth = 2;
 
-    // FILL LOGIC:
     if (s.fillColor && s.fillColor !== 'transparent' && s.fillColor !== 'none') {
       this.ctx.fillStyle = s.fillColor;
     } else {
@@ -276,7 +271,6 @@ export class BoardComponent implements AfterViewInit {
       }
     }
 
-    // Apply Fill (Lines/Freehand usually not filled)
     if (s.type !== 'line' && s.type !== 'freehand') {
       this.ctx.fill();
     }

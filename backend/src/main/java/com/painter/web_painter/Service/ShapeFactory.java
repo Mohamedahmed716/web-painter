@@ -20,8 +20,7 @@ public class ShapeFactory {
 
     public Shape createShape(String type, Map<String, Object> params) {
         String color = (String) params.get("color");
-        
-        // READ FILL COLOR
+
         String fillColor = "transparent";
         if (params.containsKey("fillColor") && params.get("fillColor") != null) {
             fillColor = (String) params.get("fillColor");
