@@ -1,45 +1,61 @@
+<!-- toolbar.html -->
 <div class="header">
   <div class="header-left">
     <h1 class="app-name">PaintMaster</h1>
   </div>
   <div class="header-right">
-    <button class="icon-btn" (click)="undo()">
+    <button class="icon-btn" (click)="undo()" title="Undo">
       <span class="material-symbols-outlined">undo</span>
     </button>
-   
-    <button class="icon-btn" (click)="redo()">
+    <button class="icon-btn" (click)="redo()" title="Redo">
       <span class="material-symbols-outlined">redo</span>
     </button>
-     <button class="tool-btn" title="Delete" (click)="deleteSelected()">
-      🗑️
-    </button>
-     <button class="tool-btn" title="resize" (click)="resizeSelected()">
-      ↔️
-    </button>
-    <button class="tool-btn" title="Copy" (click)="copySelected()">
-       📄
-     </button>
 
-    
-    <div class="dropdown">
-      <button class="dropdown-btn" (click)="$event.stopPropagation(); toggleDropdown()">
-        <span class="material-symbols-outlined">save</span>
-        Save
-      </button>
+    <button class="tool-btn" title="Delete" (click)="deleteSelected()">🗑️</button>
+    <button class="tool-btn" title="Resize" (click)="resizeSelected()">↔️</button>
+    <button class="tool-btn" title="Copy" (click)="copySelected()">📄</button>
+
+    <!-- Save Dropdown -->
+    <div class="dropdown" (click)="$event.stopPropagation(); toggleDropdown()">
+      <button class="dropdown-btn"><span class="material-symbols-outlined">save</span> Save</button>
       <div class="dropdown-menu" [class.show]="isDropdownOpen">
         <a href="#" (click)="saveFile('json'); $event.preventDefault()">Save as JSON</a>
         <a href="#" (click)="saveFile('xml'); $event.preventDefault()">Save as XML</a>
       </div>
     </div>
+
+    <!-- Load Button (Triggering Hidden Input) -->
+    <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" />
+    <button class="icon-btn" (click)="fileInput.click()" title="Load File">
+      <span class="material-symbols-outlined">upload_file</span>
+    </button>
   </div>
 </div>
-<div class="color-picker">
-  <label>Color:</label>
-  <input
-    type="color"
-    [(ngModel)]="strokeColor"
-    (change)="onStrokeColorChange()"
-  />
+
+<div class="controls">
+  <div class="color-group">
+    <label>Stroke</label>
+    <input
+      type="color"
+      [(ngModel)]="strokeColor"
+      (change)="onStrokeColorChange()"
+      class="color-input"
+    />
+  </div>
+  <div class="color-group">
+    <label>Fill</label>
+    <input
+      type="color"
+      [(ngModel)]="fillColor"
+      (change)="onFillColorChange()"
+      class="color-input"
+    />
+  </div>
+  <div class="width-group">
+    <span>Width</span>
+    <input type="range" min="1" max="50" [(ngModel)]="strokeWidth" class="slider" />
+    <span class="width-value">{{ strokeWidth }}px</span>
+  </div>
 </div>
 
 <div class="main-area">

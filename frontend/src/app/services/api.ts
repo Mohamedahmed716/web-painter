@@ -5,9 +5,7 @@ import { map } from 'rxjs/operators';
 import { Shape } from '../models/shape';
 import { Parsing } from './parsing';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
   private parsing = inject(Parsing);
@@ -25,67 +23,74 @@ export class ApiService {
       .pipe(map((data) => this.parsing.parse(data)));
   }
 
-
   undo(): Observable<Shape[]> {
     return this.http
       .post<any[]>(`${this.baseUrl}/undo`, {})
-      .pipe(map((data) => this.parsing.parse(data)));
+      .pipe(map((d) => this.parsing.parse(d)));
   }
 
   redo(): Observable<Shape[]> {
     return this.http
       .post<any[]>(`${this.baseUrl}/redo`, {})
-      .pipe(map((data) => this.parsing.parse(data)));
+      .pipe(map((d) => this.parsing.parse(d)));
   }
-  // api.ts
-select(x: number, y: number): Observable<Shape[]> {
-  return this.http
-    .post<any[]>(`${this.baseUrl}/select`, { x, y })
-    .pipe(map((data) => this.parsing.parse(data)));
-}
 
-moveSelected(dx: number, dy: number): Observable<Shape[]> {
-  return this.http
-    .post<any[]>(`${this.baseUrl}/move`, { dx, dy })
-    .pipe(map((data) => this.parsing.parse(data)));
-}
+  select(x: number, y: number): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/select`, { x, y })
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
 
-resizeSelected(anchor: string, dx: number, dy: number): Observable<Shape[]> {
-  return this.http
-    .post<any[]>(`${this.baseUrl}/resize`, { anchor, dx, dy })
-    .pipe(map((data) => this.parsing.parse(data)));
-}
+  // CRITICAL for Undo on Move: Snapshot state before moving
+  startMove() {
+    return this.http.post<any[]>(`${this.baseUrl}/move/start`, {});
+  }
 
-copySelected(): Observable<Shape[]> {
-  return this.http
-    .post<any[]>(`${this.baseUrl}/copy`, {})
-    .pipe(map(data => this.parsing.parse(data)));
-}
-pasteSelected(x: number, y: number): Observable<Shape[]> {
-  return this.http
-    .post<any[]>(`${this.baseUrl}/paste`, { x, y })
-    .pipe(map((data) => this.parsing.parse(data)));
-}
+  moveSelected(dx: number, dy: number): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/move`, { dx, dy })
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
 
+  endMove() {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/move/end`, {})
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
 
-deleteSelected(): Observable<Shape[]> {
-  return this.http
-    .post<any[]>(`${this.baseUrl}/delete`, {})
-    .pipe(map((data) => this.parsing.parse(data)));
-}
-startMove() {
-  return this.http.post<any[]>(`${this.baseUrl}/move/start`, {});
-}
+  resizeSelected(anchor: string, dx: number, dy: number): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/resize`, { anchor, dx, dy })
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
 
-endMove() {
-  return this.http.post<any[]>(`${this.baseUrl}/move/end`, {});
-}
-updateColor(color: string): Observable<Shape[]> {
-  return this.http
-    .post<any[]>(`${this.baseUrl}/color`, { color })
-    .pipe(map((data) => this.parsing.parse(data)));
-}
+  copySelected(): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/copy`, {})
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
 
+  deleteSelected(): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/delete`, {})
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
 
+  updateColor(color: string): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/color`, { color })
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
 
+  // FILE OPERATIONS
+  save(format: string) {
+    // Trigger browser download
+    window.open(`${this.baseUrl}/save/${format}`, '_blank');
+  }
+
+  load(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.baseUrl}/load`, formData, { responseType: 'text' });
+  }
 }

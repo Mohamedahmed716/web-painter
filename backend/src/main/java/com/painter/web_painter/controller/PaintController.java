@@ -1,5 +1,5 @@
 package com.painter.web_painter.controller;
-import java.nio.charset.Charset;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.painter.web_painter.Service.PaintService;
@@ -29,110 +35,94 @@ public class PaintController {
         this.paintService = paintService;
     }
 
+    // --- BASIC ---
     @GetMapping("/shapes")
-    public ResponseEntity<List<Shape>> getAllShapes() {
-        return ResponseEntity.ok(paintService.getShapes());
-    }
+    public ResponseEntity<List<Shape>> getAll() { return ResponseEntity.ok(paintService.getShapes()); }
 
     @PostMapping("/create")
-    public ResponseEntity<List<Shape>> createShape(@RequestBody Map<String, Object> payload) {
-        String type = (String) payload.get("type");
-        Map<String, Object> params = (Map<String, Object>) payload.get("params");
-        Shape s = factory.createShape(type, params);
-        if (s != null) {
-            paintService.addShape(s);
-        }
+    public ResponseEntity<List<Shape>> create(@RequestBody Map<String, Object> payload) {
+        Shape s = factory.createShape((String)payload.get("type"), (Map)payload.get("params"));
+        if (s != null) paintService.addShape(s);
         return ResponseEntity.ok(paintService.getShapes());
     }
 
     @PostMapping("/undo")
-    public ResponseEntity<List<Shape>> undoShape() {
-        paintService.undo();
-        return ResponseEntity.ok(paintService.getShapes());
-    }
+    public ResponseEntity<List<Shape>> undo() { paintService.undo(); return ResponseEntity.ok(paintService.getShapes()); }
 
     @PostMapping("/redo")
-    public ResponseEntity<List<Shape>> redoShape() {
-        paintService.redo();
-        return ResponseEntity.ok(paintService.getShapes());
-    }
+    public ResponseEntity<List<Shape>> redo() { paintService.redo(); return ResponseEntity.ok(paintService.getShapes()); }
 
-
-    @GetMapping("files/save/json")
-    public ResponseEntity<byte[]> saveJson() {
-        try {
-            String json = paintService.SavetoJson();
-            byte[] content = json.getBytes(StandardCharsets.UTF_8);
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.json\"")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(content);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @GetMapping("/files/save/xml")
-    public ResponseEntity<byte[]> saveXml() {
-        try {
-            String xml = paintService.SavetoXml();
-            byte[] content = xml.getBytes(Charset.forName("ISO-8859-1"));
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.xml\"")
-                    .contentType(MediaType.APPLICATION_XML)
-                    .body(content);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    // Load File
-    @PostMapping("/files/load")
-    public ResponseEntity<String> loadFile(@RequestParam("file") MultipartFile file) {
-        try {
-            paintService.loadFromFile(file);
-            return ResponseEntity.ok("File loaded successfully");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error loading file: " + e.getMessage());
-        }
-    }
-    // PaintController.java
-
+    // --- MANIPULATION ---
     @PostMapping("/select")
-    public ResponseEntity<List<Shape>> selectShape(@RequestBody Map<String, Object> payload) {
-        double x = ((Number) payload.get("x")).doubleValue();
-        double y = ((Number) payload.get("y")).doubleValue();
-        paintService.selectShapeAt(x, y);
+    public ResponseEntity<List<Shape>> select(@RequestBody Map<String, Double> payload) {
+        paintService.selectShapeAt(payload.get("x"), payload.get("y"));
         return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/move/start")
+    public ResponseEntity<Void> startMove() {
+        paintService.startMove(); // CRITICAL: Snapshots state before drag starts
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/move")
-    public ResponseEntity<List<Shape>> moveSelected(@RequestBody Map<String, Object> payload) {
-        double dx = ((Number) payload.get("dx")).doubleValue();
-        double dy = ((Number) payload.get("dy")).doubleValue();
-        paintService.moveSelected(dx, dy);
+    public ResponseEntity<List<Shape>> move(@RequestBody Map<String, Double> payload) {
+        paintService.moveSelected(payload.get("dx"), payload.get("dy"));
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    @PostMapping("/move/end")
+    public ResponseEntity<List<Shape>> endMove() {
+        paintService.endMove(); 
         return ResponseEntity.ok(paintService.getShapes());
     }
 
     @PostMapping("/resize")
-    public ResponseEntity<List<Shape>> resizeSelected(@RequestBody Map<String, Object> payload) {
-        String anchor = (String) payload.get("anchor");
-        double dx = ((Number) payload.get("dx")).doubleValue();
-        double dy = ((Number) payload.get("dy")).doubleValue();
-        paintService.resizeSelected(anchor, dx, dy);
+    public ResponseEntity<List<Shape>> resize(@RequestBody Map<String, Object> payload) {
+        paintService.resizeSelected((String)payload.get("anchor"), 
+            ((Number)payload.get("dx")).doubleValue(), 
+            ((Number)payload.get("dy")).doubleValue());
         return ResponseEntity.ok(paintService.getShapes());
     }
 
     @PostMapping("/copy")
-    public ResponseEntity<List<Shape>> copySelected() {
+    public ResponseEntity<List<Shape>> copy() {
         paintService.copySelected();
         return ResponseEntity.ok(paintService.getShapes());
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<List<Shape>> deleteSelected() {
+    public ResponseEntity<List<Shape>> delete() {
         paintService.deleteSelected();
         return ResponseEntity.ok(paintService.getShapes());
     }
 
+    // --- FILES ---
+    @GetMapping("/save/json")
+    public ResponseEntity<byte[]> saveJson() {
+        try {
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.json\"")
+                .body(paintService.SavetoJson().getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) { return ResponseEntity.internalServerError().build(); }
+    }
+
+    @GetMapping("/save/xml")
+    public ResponseEntity<byte[]> saveXml() {
+        try {
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.xml\"")
+                .contentType(MediaType.APPLICATION_XML)
+                .body(paintService.SavetoXml().getBytes(StandardCharsets.ISO_8859_1));
+        } catch (Exception e) { return ResponseEntity.internalServerError().build(); }
+    }
+
+    // FIX: Ensure path matches Frontend ('/load' vs '/files/load')
+    @PostMapping("/load") 
+    public ResponseEntity<String> load(@RequestParam("file") MultipartFile file) {
+        try {
+            paintService.loadFromFile(file);
+            return ResponseEntity.ok("Loaded");
+        } catch (Exception e) { return ResponseEntity.badRequest().body(e.getMessage()); }
+    }
 }
