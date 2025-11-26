@@ -27,7 +27,7 @@ export class ToolbarComponent {
     { id: 'ellipse', icon: '⬭', label: 'Ellipse' },
   ];
 
-  activeTool: string = 'line';
+  activeTool: string = 'Circle';
   strokeColor: string = '#333333';
   fillColor: string = '#ffffff';
   strokeWidth: number = 2;
