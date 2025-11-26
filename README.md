@@ -1,136 +1,147 @@
-# PaintMaster
+# PaintMaster - Vector Graphics Application
 
-PaintMaster - Vector Graphics Application
+PaintMaster is a full-stack vector graphics editor built with **Angular
+17+** on the frontend and **Spring Boot** on the backend. It allows
+users to draw geometric shapes, manipulate them (move, resize, copy,
+delete), and save/load their work using JSON or XML formats.
 
-PaintMaster is a full-stack vector graphics editor built with Angular 17+ (Frontend) and Spring Boot (Backend). It allows users to draw geometric shapes, manipulate them (move, resize, copy, delete), and persist their work using JSON or XML formats.
+## 🚀 Features
 
-🚀 Features
+### Drawing Tools
 
-Drawing Tools
+-   Freehand (Pencil): Draw free-form lines.
+-   Shapes: Line Segment, Circle, Rectangle, Square, Triangle, Ellipse.
 
-Freehand (Pencil): Draw free-form lines.
+### Manipulation & Editing
 
-Shapes: Line Segment, Circle, Rectangle, Square, Triangle, Ellipse.
+-   Select & Move: Click to select a shape and drag to move it.
+-   Resize: Drag the handle on the bottom-right corner of a selected
+    shape.
+-   Copy & Paste:
+    1.  Select a shape\
+    2.  Click "Copy"\
+    3.  Click anywhere on the canvas to paste the duplicate
+-   Delete: Remove selected shapes or clear the entire board.
+-   Undo / Redo: Supports full history traversal.
 
-Manipulation & Editing
+### Styling
 
-Select & Move: Click to select a shape and drag to move it.
+-   Stroke Color: Change outline color.
+-   Fill Color: Add solid fill color to closed shapes.
+-   Stroke Width: Adjust border and line thickness.
 
-Resize: Drag the handle on the bottom-right corner of a selected shape to resize it.
+### Persistence
 
-Copy & Paste: 1. Select a shape.
-2. Click Copy (stores the shape).
-3. Click anywhere on the board to Paste a duplicate at that location.
+-   Save as `.json` or `.xml`
+-   Load previously exported files
 
-Delete: Remove selected shapes or Clear Board to reset everything.
+## 🛠️ Tech Stack
 
-Undo / Redo: Robust history management for all actions.
+### Frontend
 
-Styling
+-   Angular 17+ (Standalone Components)
+-   RxJS BehaviorSubjects
+-   CSS3 (Flexbox, Variables)
+-   HTML5 Canvas API
 
-Stroke Color: Change the outline color of any shape.
+### Backend
 
-Fill Color: Fill closed shapes (Circle, Rect, Triangle, etc.) with a solid color.
+-   Spring Boot 3+
+-   Java 17+
+-   Jackson (JSON/XML)
+-   Service + Controller architecture with Singleton state
 
-Stroke Width: Adjust the thickness of lines and borders using the slider.
+## 📡 RESTful API Architecture
 
-Persistence
+PaintMaster uses a simple REST API. The frontend sends user actions and
+receives updated shape lists or state changes.
 
-Save: Export drawings as .json or .xml files.
+**Base URL:** `http://localhost:8080/api`
 
-Load: Upload previously saved files to restore the canvas state.
+### Available Endpoints
 
-🛠️ Tech Stack
+-   `GET /shapes` --- Get all shapes
+-   `POST /create` --- Create a new shape\
+    Example body: `{ "type": "circle", "params": { ... } }`
+-   `POST /select` --- Select shape at coordinates\
+    Example: `{ "x": 100, "y": 200 }`
+-   `POST /move` --- Move selected shape\
+    Example: `{ "dx": 10, "dy": -5 }`
+-   `POST /resize` --- Resize selected shape\
+    Example: `{ "anchor": "bottom-right", "dx": 5, "dy": 5 }`
+-   `POST /copy` --- Copy selected shape
+-   `POST /paste` --- Paste copy at coordinates\
+    Example: `{ "x": 150, "y": 150 }`
+-   `POST /delete` --- Delete selected shape
+-   `POST /clear` --- Clear all shapes
+-   `POST /undo` --- Undo last action
+-   `POST /redo` --- Redo action
+-   `POST /color` --- Change stroke color\
+    Example: `{ "color": "#ff0000" }`
+-   `POST /fill` --- Change fill color\
+    Example: `{ "fillColor": "#00ff00" }`
+-   `POST /width` --- Change stroke width\
+    Example: `{ "width": 5 }`
+-   `GET /save/{format}` --- Download JSON or XML
+-   `POST /load` --- Upload and restore file (`multipart/form-data`)
 
-Frontend
+## ⚙️ Setup & Installation
 
-Framework: Angular 17+ (Standalone Components)
+### Prerequisites
 
-State Management: RxJS (BehaviorSubjects)
+-   Node.js 18+
+-   npm
+-   Java JDK 17+
+-   Maven
 
-Styling: CSS3 (Flexbox, CSS Variables)
+### Backend Setup
 
-Canvas: HTML5 Canvas API
+1.  Navigate to the backend folder\
+2.  Run:
 
-Backend
+```{=html}
+<!-- -->
+```
+    mvn spring-boot:run
 
-Framework: Spring Boot 3+
+Backend will start on:\
+`http://localhost:8080`
 
-Language: Java 17+
+### Frontend Setup
 
-Data Handling: Jackson (JSON/XML Serialization)
+1.  Navigate to the frontend folder\
+2.  Install dependencies:
 
-Architecture: Service-Controller Layer with Singleton State Management
+```{=html}
+<!-- -->
+```
+    npm install
 
-⚙️ Setup & Installation
+3.  Start the dev server:
 
-Prerequisites
+```{=html}
+<!-- -->
+```
+    ng serve
 
-Node.js (v18+) & npm
+Frontend runs at:\
+`http://localhost:4200`
 
-Java JDK 17+
+## 📖 How to Use
 
-Maven
+-   Select a tool from the sidebar and draw on the canvas.
+-   Switch to the Select Tool to highlight a shape (blue outline).
+-   Drag to move selected shapes.
+-   Resize using the bottom-right white handle.
+-   Copy → click anywhere → Paste to duplicate a shape.
+-   Change stroke, fill color, or width using the top toolbar.
+-   Save drawings as JSON or XML.
+-   Load a saved file to restore the canvas.
 
-1. Backend Setup
+## 📐 Design Patterns
 
-Navigate to the backend folder.
+PaintMaster uses several OOP design patterns:
 
-Run the application using Maven:
-
-mvn spring-boot:run
-
-
-The server will start at http://localhost:8080.
-
-2. Frontend Setup
-
-Navigate to the frontend folder.
-
-Install dependencies:
-
-npm install
-
-
-Start the development server:
-
-ng serve
-
-
-Open your browser at http://localhost:4200.
-
-📖 How to Use
-
-Drawing: Select a tool from the left sidebar and drag on the white canvas to draw.
-
-Selecting: Switch to the Select Tool (Cursor icon). Click on any shape to select it (blue outline appears).
-
-Moving: Drag a selected shape to move it.
-
-Resizing: Select a shape, then drag the white square handle at the bottom-right corner.
-
-Copy/Paste:
-
-Select a shape.
-
-Click the Copy icon (Paper).
-
-Click anywhere on the canvas to Paste the copy.
-
-Styling: Use the top bar controls to change Stroke Color, Fill Color, or Width. Changes apply to the selected shape immediately.
-
-Saving: Click Save in the top right and choose JSON or XML.
-
-Loading: Click the Folder icon to upload a saved file.
-
-📐 Design Patterns
-
-This project implements several key OOP design patterns:
-
-Factory Pattern: The ShapeFactory class encapsulates the logic for creating different shape objects (Circle, Rectangle, FreehandShape) from raw input data.
-
-Prototype Pattern: The clone() method in the Shape class hierarchy allows for deep copying of objects, which is essential for the Copy/Paste feature and the Undo/Redo history stacks.
-
-Singleton Pattern: The PaintService in Spring Boot acts as a singleton, maintaining the single source of truth for the application state (the list of shapes) across multiple API requests.
-
-Memento Pattern (Variant): The Undo/Redo functionality uses stacks to save snapshots (
+-   Factory Pattern: Creates all shape objects.
+-   Prototype Pattern: `clone()` enables deep copying.
+-   Singleton Pattern: A single PaintService stores state.
