@@ -38,27 +38,13 @@
 
 <div class="controls">
   <div class="color-group">
-    <label>Stroke</label>
+    <label>Color</label>
     <input
       type="color"
       [(ngModel)]="strokeColor"
       (change)="onStrokeColorChange()"
       class="color-input"
     />
-  </div>
-  <div class="color-group">
-    <label>Fill</label>
-    <input
-      type="color"
-      [(ngModel)]="fillColor"
-      (change)="onFillColorChange()"
-      class="color-input"
-    />
-  </div>
-  <div class="width-group">
-    <span>Width</span>
-    <input type="range" min="1" max="50" [(ngModel)]="strokeWidth" class="slider" />
-    <span class="width-value">{{ strokeWidth }}px</span>
   </div>
 </div>
 

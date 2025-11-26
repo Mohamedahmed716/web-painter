@@ -36,16 +36,28 @@ public class PaintController {
         this.paintService = paintService;
     }
 
-    // --- BASIC ---
+    // --- BASIC OPERATIONS ---
+
     @GetMapping("/shapes")
-    public ResponseEntity<List<Shape>> getAll() { return ResponseEntity.ok(paintService.getShapes()); }
+    public ResponseEntity<List<Shape>> getAll() { 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
 
     @PostMapping("/create")
     public ResponseEntity<List<Shape>> create(@RequestBody Map<String, Object> payload) {
         try {
             String type = (String) payload.get("type");
+            // The params map comes directly from the request body. 
+            // Jackson handles the initial deserialization to Map<String, Object>.
+            // We cast it to Map<String, Object> to pass to the factory.
+            @SuppressWarnings("unchecked")
             Map<String, Object> params = (Map<String, Object>) payload.get("params");
             
+            // If params is null, create an empty map to avoid NullPointerException in factory
+            if (params == null) {
+                 params = Map.of();
+            }
+
             Shape s = factory.createShape(type, params);
             if (s != null) {
                 paintService.addShape(s);
@@ -69,10 +81,14 @@ public class PaintController {
         return ResponseEntity.ok(paintService.getShapes()); 
     }
 
-    // --- MANIPULATION ---
+    // --- MANIPULATION (Using Object -> Number casting for safety) ---
+
     @PostMapping("/select")
-    public ResponseEntity<List<Shape>> select(@RequestBody Map<String, Double> p) {
-        paintService.selectShapeAt(p.get("x"), p.get("y"));
+    public ResponseEntity<List<Shape>> select(@RequestBody Map<String, Object> p) {
+        // Safely cast numbers to avoid Integer vs Double issues
+        double x = ((Number) p.get("x")).doubleValue();
+        double y = ((Number) p.get("y")).doubleValue();
+        paintService.selectShapeAt(x, y);
         return ResponseEntity.ok(paintService.getShapes());
     }
 
@@ -83,8 +99,10 @@ public class PaintController {
     }
 
     @PostMapping("/move")
-    public ResponseEntity<List<Shape>> move(@RequestBody Map<String, Double> p) {
-        paintService.moveSelected(p.get("dx"), p.get("dy"));
+    public ResponseEntity<List<Shape>> move(@RequestBody Map<String, Object> p) {
+        double dx = ((Number) p.get("dx")).doubleValue();
+        double dy = ((Number) p.get("dy")).doubleValue();
+        paintService.moveSelected(dx, dy);
         return ResponseEntity.ok(paintService.getShapes());
     }
 
@@ -101,8 +119,10 @@ public class PaintController {
     }
     
     @PostMapping("/paste")
-    public ResponseEntity<List<Shape>> paste(@RequestBody Map<String, Double> p) { 
-        paintService.pasteSelected(p.get("x"), p.get("y")); 
+    public ResponseEntity<List<Shape>> paste(@RequestBody Map<String, Object> p) { 
+        double x = ((Number) p.get("x")).doubleValue();
+        double y = ((Number) p.get("y")).doubleValue();
+        paintService.pasteSelected(x, y); 
         return ResponseEntity.ok(paintService.getShapes()); 
     }
 
@@ -114,31 +134,31 @@ public class PaintController {
 
     @PostMapping("/resize")
     public ResponseEntity<List<Shape>> resize(@RequestBody Map<String, Object> p) {
-        paintService.resizeSelected(
-            (String)p.get("anchor"), 
-            ((Number)p.get("dx")).doubleValue(), 
-            ((Number)p.get("dy")).doubleValue()
-        );
+        String anchor = (String) p.get("anchor");
+        double dx = ((Number) p.get("dx")).doubleValue();
+        double dy = ((Number) p.get("dy")).doubleValue();
+        
+        paintService.resizeSelected(anchor, dx, dy);
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    // STROKE COLOR
+    // --- COLOR & PROPERTIES ---
+
     @PostMapping("/color")
     public ResponseEntity<List<Shape>> color(@RequestBody Map<String, String> p) {
         paintService.updateColor(p.get("color"));
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    // FILL COLOR (This was missing!)
     @PostMapping("/fill")
     public ResponseEntity<List<Shape>> fill(@RequestBody Map<String, String> p) {
+        // Matches frontend { fillColor: ... } payload
         paintService.updateFillColor(p.get("fillColor"));
         return ResponseEntity.ok(paintService.getShapes());
     }
 
     // --- FILES ---
     
-    // FIX: Changed path to match Frontend API ('/files/save/json' -> '/save/json')
     @GetMapping("/save/json")
     public ResponseEntity<byte[]> saveJson() {
         try { 
@@ -153,7 +173,6 @@ public class PaintController {
         }
     }
 
-    // FIX: Changed path to match Frontend API ('/files/save/xml' -> '/save/xml')
     @GetMapping("/save/xml")
     public ResponseEntity<byte[]> saveXml() {
         try { 
@@ -168,7 +187,6 @@ public class PaintController {
         }
     }
 
-    // FIX: Changed path to match Frontend API ('/files/load' -> '/load')
     @PostMapping("/load") 
     public ResponseEntity<String> load(@RequestParam("file") MultipartFile file) {
         try { 

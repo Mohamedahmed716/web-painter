@@ -5,7 +5,9 @@ import { map } from 'rxjs/operators';
 import { Shape } from '../models/shape';
 import { Parsing } from './parsing';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root',
+})
 export class ApiService {
   private http = inject(HttpClient);
   private parsing = inject(Parsing);
@@ -69,6 +71,12 @@ export class ApiService {
       .pipe(map((d) => this.parsing.parse(d)));
   }
 
+  pasteSelected(x: number, y: number): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/paste`, { x, y })
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
+
   deleteSelected(): Observable<Shape[]> {
     return this.http
       .post<any[]>(`${this.baseUrl}/delete`, {})
@@ -81,7 +89,13 @@ export class ApiService {
       .pipe(map((d) => this.parsing.parse(d)));
   }
 
-  // NEW: Returns Blob for "Save As"
+  // CRITICAL FIX: Send key 'fillColor' to match Backend Controller
+  updateFillColor(fillColor: string): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/fill`, { fillColor })
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
+
   downloadFile(format: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/save/${format}`, { responseType: 'blob' });
   }
@@ -90,17 +104,5 @@ export class ApiService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post(`${this.baseUrl}/load`, formData, { responseType: 'text' });
-  }
-
-  pasteSelected(x: number, y: number): Observable<Shape[]> {
-    return this.http
-      .post<any[]>(`${this.baseUrl}/paste`, { x, y })
-      .pipe(map((d) => this.parsing.parse(d)));
-  }
-  // NEW: Update Fill Color
-  updateFillColor(color: string): Observable<Shape[]> {
-    return this.http
-      .post<any[]>(`${this.baseUrl}/fill`, { color })
-      .pipe(map((d) => this.parsing.parse(d)));
   }
 }
