@@ -1,6 +1,9 @@
 <!-- toolbar.html -->
 <div class="header">
   <div class="header-left">
+    <div class="logo-box">
+      <span class="material-symbols-outlined">brush</span>
+    </div>
     <h1 class="app-name">PaintMaster</h1>
   </div>
   <div class="header-right">
@@ -19,12 +22,13 @@
     <div class="dropdown" (click)="$event.stopPropagation(); toggleDropdown()">
       <button class="dropdown-btn"><span class="material-symbols-outlined">save</span> Save</button>
       <div class="dropdown-menu" [class.show]="isDropdownOpen">
-        <a href="#" (click)="saveFile('json'); $event.preventDefault()">Save as JSON</a>
-        <a href="#" (click)="saveFile('xml'); $event.preventDefault()">Save as XML</a>
+        <!-- Prevent default link behavior and call TS function -->
+        <a href="#" (click)="$event.preventDefault(); saveFile('json')">Save as JSON</a>
+        <a href="#" (click)="$event.preventDefault(); saveFile('xml')">Save as XML</a>
       </div>
     </div>
 
-    <!-- Load Button (Triggering Hidden Input) -->
+    <!-- Load Button -->
     <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" />
     <button class="icon-btn" (click)="fileInput.click()" title="Load File">
       <span class="material-symbols-outlined">upload_file</span>

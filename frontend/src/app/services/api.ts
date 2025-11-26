@@ -41,7 +41,6 @@ export class ApiService {
       .pipe(map((d) => this.parsing.parse(d)));
   }
 
-  // CRITICAL for Undo on Move: Snapshot state before moving
   startMove() {
     return this.http.post<any[]>(`${this.baseUrl}/move/start`, {});
   }
@@ -82,10 +81,9 @@ export class ApiService {
       .pipe(map((d) => this.parsing.parse(d)));
   }
 
-  // FILE OPERATIONS
-  save(format: string) {
-    // Trigger browser download
-    window.open(`${this.baseUrl}/save/${format}`, '_blank');
+  // NEW: Returns the file content as a Blob so we can show Save As dialog
+  downloadFile(format: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/save/${format}`, { responseType: 'blob' });
   }
 
   load(file: File) {

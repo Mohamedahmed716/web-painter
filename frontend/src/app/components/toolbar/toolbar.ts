@@ -46,7 +46,7 @@ export class ToolbarComponent {
   }
 
   onFillColorChange() {
-    console.log('Fill color changed:', this.fillColor);
+    console.log('Fill color:', this.fillColor);
   }
 
   undo() {
@@ -55,7 +55,6 @@ export class ToolbarComponent {
   redo() {
     this.drawingService.redo();
   }
-
   deleteSelected() {
     this.drawingService.triggerAction('delete');
   }
@@ -77,20 +76,49 @@ export class ToolbarComponent {
     if (!clickedInside) this.isDropdownOpen = false;
   }
 
-  saveFile(format: string) {
-    // Delegate download to API service
-    this.api.save(format);
+  // --- SAVE WITH FILE PICKER ---
+  async saveFile(format: string) {
     this.isDropdownOpen = false;
+
+    // 1. Get the content from the backend (Blob)
+    this.api.downloadFile(format).subscribe(async (blob) => {
+      try {
+        // 2. Check if 'showSaveFilePicker' exists (Modern Browsers)
+        if ('showSaveFilePicker' in window) {
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: `drawing.${format}`,
+            types: [
+              {
+                description: format.toUpperCase() + ' File',
+                accept: { [format === 'json' ? 'application/json' : 'text/xml']: ['.' + format] },
+              },
+            ],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+        } else {
+          // 3. Fallback for older browsers (Classic Download)
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `drawing.${format}`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+      } catch (err) {
+        console.error('Save cancelled or failed', err);
+      }
+    });
   }
 
-  // Handle File Upload
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
       this.api.load(file).subscribe({
-        next: (response) => {
-          console.log(response);
-          // Force refresh
+        next: (msg) => {
+          console.log(msg);
+          // Reload page to refresh state from backend
           window.location.reload();
         },
         error: (err) => console.error('Load failed', err),

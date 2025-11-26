@@ -20,16 +20,12 @@ export class DrawingService {
   copy$ = new Subject<void>();
   colorChange$ = new Subject<any>();
 
-
   triggerAction(action: string) {
-  if (action === 'delete') {
-    this.delete$.next();
+    if (action === 'delete') {
+      this.delete$.next();
+    }
+    if (action === 'copy') this.copy$.next();
   }
-  if (action === 'copy') this.copy$.next();
-
-}
-
-
 
   setTool(tool: string) {
     this.toolSource.next(tool);
