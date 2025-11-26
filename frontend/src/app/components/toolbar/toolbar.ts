@@ -72,13 +72,11 @@ export class ToolbarComponent {
     if (!clickedInside) this.isDropdownOpen = false;
   }
 
-  // --- SAVE FILE ---
   async saveFile(format: string) {
     this.isDropdownOpen = false;
 
     this.api.downloadFile(format).subscribe(async (blob) => {
       try {
-        // Modern "Save As" Dialog
         if ('showSaveFilePicker' in window) {
           const handle = await (window as any).showSaveFilePicker({
             suggestedName: `drawing.${format}`,
@@ -93,7 +91,6 @@ export class ToolbarComponent {
           await writable.write(blob);
           await writable.close();
         } else {
-          // Fallback Download
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
@@ -107,14 +104,13 @@ export class ToolbarComponent {
     });
   }
 
-  // --- LOAD FILE ---
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
       this.api.load(file).subscribe({
         next: (msg) => {
           console.log(msg);
-          window.location.reload(); // Refresh to see loaded shapes
+          window.location.reload();
         },
         error: (err) => console.error('Load failed', err),
       });
@@ -122,9 +118,8 @@ export class ToolbarComponent {
   }
 
   onFillColorChange() {
-    // Call the API to update fill color on the selected shape
     this.api.updateFillColor(this.fillColor).subscribe((shapes) => {
-      this.drawingService.colorChange$.next(shapes); // Notify board to redraw
+      this.drawingService.colorChange$.next(shapes);
     });
   }
 }

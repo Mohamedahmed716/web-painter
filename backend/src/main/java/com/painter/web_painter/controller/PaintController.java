@@ -36,8 +36,7 @@ public class PaintController {
         this.paintService = paintService;
     }
 
-    // --- BASIC OPERATIONS ---
-
+    // --- BASIC ---
     @GetMapping("/shapes")
     public ResponseEntity<List<Shape>> getAll() { 
         return ResponseEntity.ok(paintService.getShapes()); 
@@ -81,8 +80,7 @@ public class PaintController {
         return ResponseEntity.ok(paintService.getShapes()); 
     }
 
-    // --- MANIPULATION (Using Object -> Number casting for safety) ---
-
+    // --- MANIPULATION ---
     @PostMapping("/select")
     public ResponseEntity<List<Shape>> select(@RequestBody Map<String, Object> p) {
         // Safely cast numbers to avoid Integer vs Double issues
@@ -142,8 +140,7 @@ public class PaintController {
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    // --- COLOR & PROPERTIES ---
-
+    // STROKE COLOR
     @PostMapping("/color")
     public ResponseEntity<List<Shape>> color(@RequestBody Map<String, String> p) {
         paintService.updateColor(p.get("color"));
@@ -159,6 +156,7 @@ public class PaintController {
 
     // --- FILES ---
     
+    // FIX: Changed path to match Frontend API ('/files/save/json' -> '/save/json')
     @GetMapping("/save/json")
     public ResponseEntity<byte[]> saveJson() {
         try { 

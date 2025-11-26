@@ -20,7 +20,7 @@ export class Parsing {
       y: item.y,
       color: item.color,
 
-      // CRITICAL FIX: Map the fill color property
+      // *** CRITICAL: MAP FILL COLOR ***
       fillColor: item.fillColor,
 
       radius: undefined,

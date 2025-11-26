@@ -5,25 +5,20 @@ import { BehaviorSubject, Subject } from 'rxjs';
   providedIn: 'root',
 })
 export class DrawingService {
-  // State sources
   private toolSource = new BehaviorSubject<string>('circle');
   private colorSource = new BehaviorSubject<string>('#000000');
 
-  // Triggers
   private undoSource = new Subject<void>();
   private redoSource = new Subject<void>();
 
-  // Observables
   currentTool$ = this.toolSource.asObservable();
   currentColor$ = this.colorSource.asObservable();
   undo$ = this.undoSource.asObservable();
   redo$ = this.redoSource.asObservable();
 
-  // Action Triggers
   delete$ = new Subject<void>();
   copy$ = new Subject<void>();
 
-  // CRITICAL: This must carry the payload (List<Shape>) from the backend
   colorChange$ = new Subject<any[]>();
 
   triggerAction(action: string) {
