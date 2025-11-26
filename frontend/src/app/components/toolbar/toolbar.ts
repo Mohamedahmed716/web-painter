@@ -33,6 +33,10 @@ export class ToolbarComponent {
   strokeWidth: number = 2;
   isDropdownOpen = false;
 
+  // --- NEW STATE ---
+  notificationMessage: string | null = null;
+  showClearConfirm = false; // Controls modal visibility
+
   selectTool(toolId: string) {
     this.activeTool = toolId;
     this.drawingService.setTool(toolId);
@@ -40,30 +44,33 @@ export class ToolbarComponent {
 
   onStrokeColorChange() {
     this.drawingService.setColor(this.strokeColor);
-    this.api.updateColor(this.strokeColor).subscribe((shapes) => {
-      this.drawingService.colorChange$.next(shapes);
+    this.api.updateColor(this.strokeColor).subscribe(shapes => {
+        this.drawingService.colorChange$.next(shapes);
     });
   }
 
-  undo() {
-    this.drawingService.undo();
-  }
-  redo() {
-    this.drawingService.redo();
-  }
-  deleteSelected() {
-    this.drawingService.triggerAction('delete');
-  }
-  resizeSelected() {
-    this.drawingService.setTool('resize');
-  }
-  copySelected() {
-    this.drawingService.copy$.next();
+  onFillColorChange() {
+    this.api.updateFillColor(this.fillColor).subscribe(shapes => {
+        this.drawingService.colorChange$.next(shapes);
+    });
   }
 
-  toggleDropdown() {
-    this.isDropdownOpen = !this.isDropdownOpen;
+  onWidthChange() {
+    this.api.updateStrokeWidth(this.strokeWidth).subscribe(shapes => {
+        this.drawingService.colorChange$.next(shapes);
+    });
   }
+
+  undo() { this.drawingService.undo(); }
+  redo() { this.drawingService.redo(); }
+  deleteSelected() { this.drawingService.triggerAction('delete'); }
+  resizeSelected() { this.drawingService.setTool('resize'); }
+  copySelected() {
+      this.drawingService.copy$.next();
+      this.showNotification("Shape copied! Click to paste.");
+  }
+
+  toggleDropdown() { this.isDropdownOpen = !this.isDropdownOpen; }
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: MouseEvent) {
@@ -74,22 +81,20 @@ export class ToolbarComponent {
 
   async saveFile(format: string) {
     this.isDropdownOpen = false;
-
     this.api.downloadFile(format).subscribe(async (blob) => {
       try {
         if ('showSaveFilePicker' in window) {
           const handle = await (window as any).showSaveFilePicker({
             suggestedName: `drawing.${format}`,
-            types: [
-              {
-                description: format.toUpperCase() + ' File',
-                accept: { [format === 'json' ? 'application/json' : 'text/xml']: ['.' + format] },
-              },
-            ],
+            types: [{
+              description: format.toUpperCase() + ' File',
+              accept: { [format === 'json' ? 'application/json' : 'text/xml']: ['.' + format] },
+            }],
           });
           const writable = await handle.createWritable();
           await writable.write(blob);
           await writable.close();
+          this.showNotification("File saved successfully!"); // Toast
         } else {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -97,6 +102,7 @@ export class ToolbarComponent {
           a.download = `drawing.${format}`;
           a.click();
           window.URL.revokeObjectURL(url);
+          this.showNotification("File downloaded!"); // Toast
         }
       } catch (err) {
         console.error('Save cancelled or failed', err);
@@ -110,24 +116,37 @@ export class ToolbarComponent {
       this.api.load(file).subscribe({
         next: (msg) => {
           console.log(msg);
-          window.location.reload();
+          this.showNotification("File loaded successfully!"); // Toast
+          setTimeout(() => window.location.reload(), 1000);
         },
-        error: (err) => console.error('Load failed', err),
+        error: (err) => {
+            console.error('Load failed', err);
+            this.showNotification("Error loading file!");
+        }
       });
     }
   }
 
-  onFillColorChange() {
-    this.api.updateFillColor(this.fillColor).subscribe((shapes) => {
+  // --- TRIGGER MODAL ---
+  confirmDeleteAll() {
+      this.showClearConfirm = true;
+  }
+
+  // --- ACTION: CLEAR BOARD ---
+  deleteAll() {
+    this.showClearConfirm = false; // Hide modal
+    this.api.deleteAll().subscribe((shapes) => {
       this.drawingService.colorChange$.next(shapes);
+      this.showNotification("Board cleared!"); // Toast
     });
   }
 
-  deleteAll() {
-    if (confirm('Are you sure you want to clear the board?')) {
-      this.api.deleteAll().subscribe((shapes) => {
-        this.drawingService.colorChange$.next(shapes); // Reuse this subject to trigger redraw with empty list
-      });
-    }
+  // --- HELPER: SHOW TOAST ---
+  showNotification(msg: string) {
+      this.notificationMessage = msg;
+      // Hide after 3 seconds
+      setTimeout(() => {
+          this.notificationMessage = null;
+      }, 3000);
   }
 }

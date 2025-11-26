@@ -89,26 +89,33 @@ export class ApiService {
       .pipe(map((d) => this.parsing.parse(d)));
   }
 
-  // NEW: Returns Blob for "Save As"
-  downloadFile(format: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/save/${format}`, { responseType: 'blob' });
+  // CRITICAL: Matches Backend /fill endpoint
+  updateFillColor(fillColor: string): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/fill`, { fillColor })
+      .pipe(map((d) => this.parsing.parse(d)));
   }
 
+  updateStrokeWidth(width: number): Observable<Shape[]> {
+    return this.http
+      .post<any[]>(`${this.baseUrl}/width`, { width })
+      .pipe(map((d) => this.parsing.parse(d)));
+  }
+
+  // CRITICAL: Matches Backend /clear endpoint (which we must add)
   deleteAll(): Observable<Shape[]> {
     return this.http
       .post<any[]>(`${this.baseUrl}/clear`, {})
       .pipe(map((d) => this.parsing.parse(d)));
   }
 
+  downloadFile(format: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/save/${format}`, { responseType: 'blob' });
+  }
+
   load(file: File) {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post(`${this.baseUrl}/load`, formData, { responseType: 'text' });
-  }
-  // NEW: Update Fill Color
-  updateFillColor(color: string): Observable<Shape[]> {
-    return this.http
-      .post<any[]>(`${this.baseUrl}/fill`, { color })
-      .pipe(map((d) => this.parsing.parse(d)));
   }
 }

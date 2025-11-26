@@ -1,8 +1,13 @@
+/* toolbar.css */
+
 :host {
   display: block;
   width: 100%;
   z-index: 100;
+  position: relative;
 }
+
+/* --- HEADER --- */
 .header {
   height: 50px;
   background-color: #ffffff;
@@ -13,208 +18,133 @@
   justify-content: space-between;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.logo-box { width: 32px; height: 32px; background-color: #3f51b5; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; }
+.logo-box span { font-size: 20px; }
+.app-name { font-size: 18px; font-weight: 700; color: #333; margin: 0; }
+.header-right { display: flex; align-items: center; gap: 8px; }
 
-.app-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #333;
-  margin: 0;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* --- CONTROLS (Second Row) --- */
+/* --- CONTROLS --- */
 .controls {
   height: 50px;
   background-color: #ffffff;
   border-bottom: 1px solid #e0e0e0;
   display: flex;
   align-items: center;
-  justify-content: center; /* Center the controls in the middle */
+  justify-content: center;
   gap: 30px;
   padding: 0 20px;
 }
 
-.color-group,
-.width-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: #444;
-  font-weight: 500;
-}
+.color-group, .width-group { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #444; font-weight: 500; }
+.color-input { width: 24px; height: 24px; border: 1px solid #ccc; border-radius: 4px; padding: 0; background: none; cursor: pointer; }
+.slider { width: 100px; cursor: pointer; }
+.width-value { min-width: 30px; text-align: right; }
 
-.color-input {
-  width: 24px;
-  height: 24px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0;
-  background: none;
-  cursor: pointer;
-}
+/* --- FLOATING TOOLBAR --- */
+.main-area { position: fixed; top: 120px; left: 20px; z-index: 101; }
+.toolbar { display: flex; flex-direction: column; gap: 8px; background: #ffffff; padding: 8px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
 
-.slider {
-  width: 100px;
-  cursor: pointer;
-}
+/* --- BUTTONS --- */
+.icon-btn, .dropdown-btn { height: 32px; padding: 0 10px; background: #f5f5f5; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; color: #555; font-weight: 600; font-size: 13px; transition: background-color 0.2s; }
+.icon-btn:hover, .dropdown-btn:hover { background: #e0e0e0; }
 
-.width-value {
-  min-width: 30px;
-  text-align: right;
-}
+.tool-btn { width: 44px; height: 44px; border: none; background: transparent; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #555; transition: background-color 0.2s; }
+.tool-btn:hover { background-color: #f5f5f5; }
+.tool-btn.selected { background-color: #3f51b5; color: white; box-shadow: 0 2px 6px rgba(63, 81, 181, 0.4); }
 
-/* --- FLOATING VERTICAL TOOLBAR --- */
-.main-area {
-  /* Fixed positioning pulls it out of the normal layout flow */
-  /* This ensures it floats on top of the board */
+/* --- DROPDOWN --- */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-menu { display: none; flex-direction: column; position: absolute; top: 130%; right: 0; min-width: 160px; z-index: 200; background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); padding: 6px; opacity: 0; transform: translateY(-10px); transition: all 0.2s ease; }
+.dropdown-menu.show { display: flex; opacity: 1; transform: translateY(0); }
+.dropdown-menu a { padding: 10px 14px; text-decoration: none; color: #4a4a4a; font-size: 13px; font-weight: 500; border-radius: 6px; transition: background-color 0.2s; }
+.dropdown-menu a:hover { background-color: #f3f4f6; color: #3f51b5; }
+
+/* --- TOAST NOTIFICATION (NEW) --- */
+.notification-toast {
   position: fixed;
-  top: 120px; /* 50px header + 50px controls + 20px margin */
-  left: 20px;
-  z-index: 100;
+  top: 80px;         /* Mid-top area */
+  left: 50%;         /* Center horizontally */
+  transform: translateX(-50%) translateY(-20px); /* Start slightly above */
+
+  background-color: #323232;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px; /* Pill shape */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+
+  font-size: 14px;
+  font-weight: 500;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy animation */
+  z-index: 3000; /* Ensure it's on top */
 }
 
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: #ffffff;
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.notification-toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0); /* Drop into place */
 }
 
-/* --- BUTTON STYLES --- */
-.icon-btn,
-.dropdown-btn {
-  height: 32px;
-  padding: 0 10px;
-  background: #f5f5f5;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+/* --- CONFIRMATION MODAL (NEW) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background-color: rgba(0,0,0,0.5); /* Dim background */
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 6px;
-  color: #555;
-  font-weight: 600;
-  font-size: 13px;
+  align-items: center;
+  z-index: 4000; /* Highest priority */
+  backdrop-filter: blur(2px);
 }
 
-.icon-btn:hover,
-.dropdown-btn:hover {
-  background: #e0e0e0;
+.modal-box {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  text-align: center;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Tool Buttons (Circle, Rect, etc.) */
-.tool-btn {
-  width: 44px;
-  height: 44px;
-  border: none;
-  background: transparent;
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-box h3 { margin-top: 0; margin-bottom: 10px; color: #333; }
+.modal-box p { color: #666; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
+
+.modal-actions {
+  display: flex;
+  justify-content: center; /* Center buttons */
+  gap: 12px;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  background: white;
   border-radius: 6px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
   color: #555;
-  transition: background-color 0.2s;
+  font-weight: 600;
+  transition: background 0.2s;
 }
 
-.tool-btn:hover {
-  background-color: #f5f5f5;
-}
-
-.tool-btn.selected {
-  background-color: #3f51b5;
+.btn-confirm {
+  padding: 10px 20px;
+  border: none;
+  background: #dc3545; /* Red */
   color: white;
-  box-shadow: 0 2px 6px rgba(63, 81, 181, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
 }
 
-/* Keep existing .dropdown styles */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-/* Default state: Hidden */
-.dropdown-menu {
-  display: none; /* Hidden by default */
-  flex-direction: column;
-  position: absolute;
-  top: 130%;
-  right: 0;
-  min-width: 180px;
-  z-index: 200;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  padding: 6px;
-
-  /* Start state for animation */
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-/* This class is added by Angular when isDropdownOpen = true */
-.dropdown-menu.show {
-  display: flex;
-  animation: menuSlideIn 0.2s forwards;
-}
-
-@keyframes menuSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Keep the rest of your link/hover styles the same... */
-.dropdown-menu a {
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #4a4a4a;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dropdown-menu a:hover {
-  background-color: #f3f4f6;
-  color: #3f51b5;
-  transform: translateX(4px);
-}
-
-.dropdown-menu::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  right: 20px;
-  width: 12px;
-  height: 12px;
-  background: white;
-  transform: rotate(45deg);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  border-left: 1px solid rgba(0, 0, 0, 0.08);
-  z-index: -1;
-}
+.btn-cancel:hover { background: #f5f5f5; }
+.btn-confirm:hover { background: #c82333; }

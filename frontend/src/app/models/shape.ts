@@ -5,6 +5,7 @@ export interface Shape {
   y: number;
   color: string;
   fillColor?: string;
+  strokeWidth?: number;
   radius?: number;
   width?: number;
   height?: number;

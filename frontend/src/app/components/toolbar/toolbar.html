@@ -18,14 +18,16 @@
     <button class="tool-btn" title="Resize" (click)="resizeSelected()">↔️</button>
     <button class="tool-btn" title="Copy" (click)="copySelected()">📄</button>
 
-    <!-- NEW: Delete All Button -->
-    <button class="tool-btn" title="Clear Board" (click)="deleteAll()" style="color: red">
+    <!-- Delete All Button (Triggers custom modal) -->
+    <button class="tool-btn" title="Clear Board" (click)="confirmDeleteAll()" style="color: red;">
       ❌
     </button>
 
     <!-- Save Dropdown -->
     <div class="dropdown" (click)="$event.stopPropagation(); toggleDropdown()">
-      <button class="dropdown-btn"><span class="material-symbols-outlined">save</span> Save</button>
+      <button class="dropdown-btn">
+        <span class="material-symbols-outlined">save</span> Save
+      </button>
       <div class="dropdown-menu" [class.show]="isDropdownOpen">
         <a href="#" (click)="$event.preventDefault(); saveFile('json')">Save as JSON</a>
         <a href="#" (click)="$event.preventDefault(); saveFile('xml')">Save as XML</a>
@@ -33,7 +35,7 @@
     </div>
 
     <!-- Load Button -->
-    <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" />
+    <input type="file" #fileInput style="display:none" (change)="onFileSelected($event)">
     <button class="icon-btn" (click)="fileInput.click()" title="Load File">
       <span class="material-symbols-outlined">upload_file</span>
     </button>
@@ -42,35 +44,47 @@
 
 <div class="controls">
   <div class="color-group">
-    <label>Color</label>
-    <input
-      type="color"
-      [(ngModel)]="strokeColor"
-      (change)="onStrokeColorChange()"
-      class="color-input"
-    />
+    <label>Stroke</label>
+    <input type="color" [(ngModel)]="strokeColor" (change)="onStrokeColorChange()" class="color-input" />
   </div>
   <div class="color-group">
     <label>Fill</label>
-    <input
-      type="color"
-      [(ngModel)]="fillColor"
-      (change)="onFillColorChange()"
-      class="color-input"
-    />
+    <input type="color" [(ngModel)]="fillColor" (change)="onFillColorChange()" class="color-input" />
+  </div>
+  <div class="width-group">
+    <span>Width</span>
+    <input type="range" min="1" max="50" [(ngModel)]="strokeWidth" (change)="onWidthChange()" class="slider" />
+    <span class="width-value">{{ strokeWidth }}px</span>
   </div>
 </div>
 
 <div class="main-area">
   <div class="toolbar">
-    <button
-      *ngFor="let tool of tools"
-      class="tool-btn"
-      [class.selected]="tool.id === activeTool"
-      [title]="tool.label"
-      (click)="selectTool(tool.id)"
-    >
+    <button *ngFor="let tool of tools"
+            class="tool-btn"
+            [class.selected]="tool.id === activeTool"
+            [title]="tool.label"
+            (click)="selectTool(tool.id)">
       {{ tool.icon }}
     </button>
+  </div>
+</div>
+
+<!-- POPUP NOTIFICATION (TOAST) -->
+<!-- Shows when notificationMessage is set -->
+<div class="notification-toast" [class.show]="notificationMessage">
+  {{ notificationMessage }}
+</div>
+
+<!-- CONFIRMATION MODAL (For Clear All) -->
+<!-- Shows when showClearConfirm is true -->
+<div class="modal-overlay" *ngIf="showClearConfirm">
+  <div class="modal-box">
+    <h3>Clear Board?</h3>
+    <p>Are you sure you want to delete all shapes?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="showClearConfirm = false">Cancel</button>
+      <button class="btn-confirm" (click)="deleteAll()">Yes, Clear All</button>
+    </div>
   </div>
 </div>
