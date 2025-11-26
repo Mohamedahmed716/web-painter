@@ -6,10 +6,21 @@
     <button class="icon-btn" (click)="undo()">
       <span class="material-symbols-outlined">undo</span>
     </button>
+   
     <button class="icon-btn" (click)="redo()">
       <span class="material-symbols-outlined">redo</span>
     </button>
+     <button class="tool-btn" title="Delete" (click)="deleteSelected()">
+      🗑️
+    </button>
+     <button class="tool-btn" title="resize" (click)="resizeSelected()">
+      ↔️
+    </button>
+    <button class="tool-btn" title="Copy" (click)="copySelected()">
+       📄
+     </button>
 
+    
     <div class="dropdown">
       <button class="dropdown-btn" (click)="$event.stopPropagation(); toggleDropdown()">
         <span class="material-symbols-outlined">save</span>
@@ -22,21 +33,15 @@
     </div>
   </div>
 </div>
-<div class="controls">
-  <div class="color-group">
-    <label>Stroke</label>
-    <input type="color" value="#333333" class="color-input" />
-  </div>
-  <div class="color-group">
-    <label>Fill</label>
-    <input type="color" value="#ffffff" class="color-input" />
-  </div>
-  <div class="width-group">
-    <span>Width</span>
-    <input type="range" min="0" max="100" value="25" class="slider" />
-    <span class="width-value">2px</span>
-  </div>
+<div class="color-picker">
+  <label>Color:</label>
+  <input
+    type="color"
+    [(ngModel)]="strokeColor"
+    (change)="onStrokeColorChange()"
+  />
 </div>
+
 <div class="main-area">
   <div class="toolbar">
     <button

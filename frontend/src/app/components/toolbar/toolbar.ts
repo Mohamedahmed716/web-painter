@@ -2,6 +2,8 @@ import { Component, inject, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DrawingService } from '../../services/drawing';
+import { ApiService } from '../../services/api';
+
 
 @Component({
   selector: 'app-toolbar',
@@ -13,9 +15,11 @@ import { DrawingService } from '../../services/drawing';
 export class ToolbarComponent {
   private drawingService = inject(DrawingService);
   private elementRef = inject(ElementRef);
+  private api = inject(ApiService);              
 
   // Added 'freehand' tool to the list
   tools = [
+    { id: 'select', icon: '🖱️', label: 'Select' },
     { id: 'freehand', icon: '✎', label: 'Freehand' }, // The new cursor tool
     { id: 'line', icon: '╱', label: 'Line' },
     { id: 'circle', icon: '○', label: 'Circle' },
@@ -23,6 +27,8 @@ export class ToolbarComponent {
     { id: 'square', icon: '□', label: 'Square' },
     { id: 'triangle', icon: '△', label: 'Triangle' },
     { id: 'ellipse', icon: '⬭', label: 'Ellipse' },
+
+
   ];
 
   colors: string[] = [
@@ -51,10 +57,18 @@ export class ToolbarComponent {
   }
 
   // --- Properties Logic ---
-  onStrokeColorChange() {
-    this.activeColor = this.strokeColor;
-    this.drawingService.setColor(this.strokeColor);
-  }
+ onStrokeColorChange() {
+  // Update drawing color for new shapes
+  this.drawingService.setColor(this.strokeColor);
+
+  // Update selected shape color
+  this.api.updateColor(this.strokeColor).subscribe(shapes => {
+    this.drawingService.colorChange$.next(shapes);
+  });
+}
+
+
+
 
   onFillColorChange() {
     // Implement fill logic in service if needed
@@ -97,4 +111,18 @@ export class ToolbarComponent {
     console.log('Saving as', format);
     this.isDropdownOpen = false;
   }
+ deleteSelected() {
+  this.drawingService.triggerAction('delete');
+}
+
+resizeSelected() {
+  this.drawingService.setTool('resize');
+}
+copySelected() {
+  this.drawingService.copy$.next();     // trigger board to start paste mode
+}
+
+
+
+
 }

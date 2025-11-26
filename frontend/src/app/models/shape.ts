@@ -10,4 +10,5 @@ export interface Shape {
   height?: number;
   radiusX?: number;
   radiusY?: number;
+  selected?: boolean;
 }
