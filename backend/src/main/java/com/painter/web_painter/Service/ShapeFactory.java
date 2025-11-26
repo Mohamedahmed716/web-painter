@@ -20,12 +20,16 @@ public class ShapeFactory {
 
     public Shape createShape(String type, Map<String, Object> params) {
         String color = (String) params.get("color");
-        String fillColor = (String) params.getOrDefault("fillColor", "transparent");
+        
+        // READ FILL COLOR
+        String fillColor = "transparent";
+        if (params.containsKey("fillColor") && params.get("fillColor") != null) {
+            fillColor = (String) params.get("fillColor");
+        }
 
         if (type.equalsIgnoreCase("freehand")) {
             List<Map<String, Object>> rawPoints = (List<Map<String, Object>>) params.get("points");
             List<Map<String, Double>> safePoints = new ArrayList<>();
-
             if (rawPoints != null) {
                 for (Map<String, Object> point : rawPoints) {
                     double px = Double.parseDouble(point.get("x").toString());
@@ -76,8 +80,7 @@ public class ShapeFactory {
                 double botRightX = Math.min(x1, x2) + tW;
                 double botRightY = Math.min(y1, y2) + tH;
                 return new Triangle(topX, topY, botLeftX, botLeftY, botRightX, botRightY, color, fillColor);
-            default:
-                return null;
+            default: return null;
         }
     }
 }

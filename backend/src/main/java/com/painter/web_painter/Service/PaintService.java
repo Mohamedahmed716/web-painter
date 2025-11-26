@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.UUID;
+import java.util.Map;
 import com.painter.web_painter.model.*;
 
 @Service
@@ -17,11 +18,12 @@ public class PaintService {
     private List<Shape> shapes = new ArrayList<>();
     private Stack<List<Shape>> undoStack = new Stack<>();
     private Stack<List<Shape>> redoStack = new Stack<>();
+    
     private String selectedShapeId = null;
+    private String clipboardShapeId = null; 
     private List<Shape> moveSnapshot = null;
 
     public List<Shape> getShapes() {
-        // Mark selected shape logic if needed
         return shapes;
     }
 
@@ -44,32 +46,19 @@ public class PaintService {
         shapes = redoStack.pop();
     }
 
-    private void saveStateToUndo() {
-        List<Shape> snapshot = new ArrayList<>();
-        for (Shape s : shapes) snapshot.add(s.clone());
-        undoStack.push(snapshot);
-    }
-
-    private void saveStateToRedo() {
-        List<Shape> snapshot = new ArrayList<>();
-        for (Shape s : shapes) snapshot.add(s.clone());
-        redoStack.push(snapshot);
-    }
-
-    // --- MANIPULATION ---
+    // --- SELECTION ---
     public void selectShapeAt(double x, double y) {
         Shape found = null;
         for (int i = shapes.size() - 1; i >= 0; i--) {
-            if (hitTest(shapes.get(i), x, y)) { found = shapes.get(i); break; }
+            if (hitTest(shapes.get(i), x, y)) {
+                found = shapes.get(i);
+                break;
+            }
         }
         selectedShapeId = (found != null) ? found.getId() : null;
-        // Set 'selected' flag on shapes for frontend highlighting
-        for(Shape s : shapes) {
-             // Assuming you have a setSelected method or field
-             // s.setSelected(s.getId().equals(selectedShapeId));
-        }
     }
 
+    // --- MOVE ---
     public void startMove() {
         moveSnapshot = new ArrayList<>();
         for (Shape s : shapes) moveSnapshot.add(s.clone());
@@ -78,18 +67,7 @@ public class PaintService {
     public void moveSelected(double dx, double dy) {
         if (selectedShapeId == null) return;
         Shape s = getShapeById(selectedShapeId);
-        if (s == null) return;
-        
-        // Update coordinates (add your shape specific setters here)
-        if (s instanceof Rectangle) { ((Rectangle)s).setX(((Rectangle)s).getX() + dx); ((Rectangle)s).setY(((Rectangle)s).getY() + dy); }
-        else if (s instanceof Circle) { ((Circle)s).setX(((Circle)s).getX() + dx); ((Circle)s).setY(((Circle)s).getY() + dy); }
-        else if (s instanceof FreehandShape) {
-             for (var p : ((FreehandShape)s).getPoints()) {
-                 p.put("x", p.get("x") + dx);
-                 p.put("y", p.get("y") + dy);
-             }
-        }
-        // ... add other shapes ...
+        if (s != null) moveShape(s, dx, dy);
     }
 
     public void endMove() {
@@ -100,18 +78,76 @@ public class PaintService {
         }
     }
 
+    // --- COPY & PASTE ---
     public void copySelected() {
+        if (selectedShapeId != null) {
+            clipboardShapeId = selectedShapeId;
+        }
+    }
+
+    public void pasteSelected(double x, double y) {
+        if (clipboardShapeId == null) return;
+        Shape original = getShapeById(clipboardShapeId);
+        if (original == null) return;
+
+        saveStateToUndo();
+
+        Shape copy = original.clone();
+        copy.setId(UUID.randomUUID().toString());
+        
+        if (x != 0 || y != 0) {
+             double dx = x - copy.getX();
+             double dy = y - copy.getY();
+             moveShape(copy, dx, dy);
+        } else {
+             moveShape(copy, 20, 20);
+        }
+
+        shapes.add(copy);
+        selectedShapeId = copy.getId(); 
+        redoStack.clear();
+    }
+
+    // --- RESIZE ---
+    public void resizeSelected(String anchor, double dx, double dy) {
         if (selectedShapeId == null) return;
         Shape s = getShapeById(selectedShapeId);
         if (s == null) return;
-        saveStateToUndo();
-        Shape copy = s.clone();
-        copy.setId(UUID.randomUUID().toString());
-        // Offset logic
-        if(copy instanceof Rectangle) { ((Rectangle)copy).setX(((Rectangle)copy).getX()+20); ((Rectangle)copy).setY(((Rectangle)copy).getY()+20); }
-        shapes.add(copy);
-        selectedShapeId = copy.getId();
-        redoStack.clear();
+
+        if (s instanceof Rectangle) {
+            Rectangle r = (Rectangle) s;
+            r.setWidth(Math.max(5, r.getWidth() + dx));
+            r.setHeight(Math.max(5, r.getHeight() + dy));
+        } else if (s instanceof Square) {
+            Square sq = (Square) s;
+            sq.setSideLength(Math.max(5, sq.getSideLength() + dx));
+        } else if (s instanceof Circle) {
+            Circle c = (Circle) s;
+            c.setRadius(Math.max(5, c.getRadius() + dx));
+        } else if (s instanceof Ellipse) {
+            Ellipse e = (Ellipse) s;
+            e.setRadiusX(Math.max(5, e.getRadiusX() + dx));
+            e.setRadiusY(Math.max(5, e.getRadiusY() + dy));
+        } else if (s instanceof LineSegment) {
+            LineSegment l = (LineSegment) s;
+            l.setX2(l.getX2() + dx);
+            l.setY2(l.getY2() + dy);
+        } else if (s instanceof Triangle) {
+            Triangle t = (Triangle) s;
+            // Assuming standard isosceles creation:
+            // x,y is top point. x2,y2 is bottom-left. x3,y3 is bottom-right.
+            
+            // Stretch width (affects x3 and half of x2 if we want to keep center, 
+            // or just x3 to stretch right)
+            // Let's stretch to the right and down
+            
+            t.setX3(t.getX3() + dx); // Bottom-right moves X
+            t.setY2(t.getY2() + dy); // Bottom-left moves Y
+            t.setY3(t.getY3() + dy); // Bottom-right moves Y
+            
+            // Optional: Keep it isosceles by moving x2 inversely? 
+            // Or just simple stretch. Simple stretch logic above.
+        }
     }
 
     public void deleteSelected() {
@@ -120,13 +156,6 @@ public class PaintService {
         shapes.removeIf(s -> s.getId().equals(selectedShapeId));
         selectedShapeId = null;
         redoStack.clear();
-    }
-
-    public void resizeSelected(String anchor, double dx, double dy) {
-        if (selectedShapeId == null) return;
-        Shape s = getShapeById(selectedShapeId);
-        if (s == null) return;
-        // Add resize logic (e.g. s.setWidth(s.getWidth() + dx))
     }
 
     public void updateColor(String color) {
@@ -139,13 +168,74 @@ public class PaintService {
         }
     }
 
+    // --- HELPERS ---
+    private void moveShape(Shape s, double dx, double dy) {
+        if (s instanceof Rectangle) { ((Rectangle)s).setX(((Rectangle)s).getX() + dx); ((Rectangle)s).setY(((Rectangle)s).getY() + dy); }
+        else if (s instanceof Circle) { ((Circle)s).setX(((Circle)s).getX() + dx); ((Circle)s).setY(((Circle)s).getY() + dy); }
+        else if (s instanceof Square) { ((Square)s).setX(((Square)s).getX() + dx); ((Square)s).setY(((Square)s).getY() + dy); }
+        else if (s instanceof Ellipse) { ((Ellipse)s).setX(((Ellipse)s).getX() + dx); ((Ellipse)s).setY(((Ellipse)s).getY() + dy); }
+        else if (s instanceof LineSegment) { 
+            LineSegment l = (LineSegment) s;
+            l.setX(l.getX() + dx); l.setY(l.getY() + dy);
+            l.setX2(l.getX2() + dx); l.setY2(l.getY2() + dy);
+        } else if (s instanceof Triangle) {
+            Triangle t = (Triangle) s;
+            t.setX(t.getX() + dx); t.setY(t.getY() + dy);
+            t.setX2(t.getX2() + dx); t.setY2(t.getY2() + dy);
+            t.setX3(t.getX3() + dx); t.setY3(t.getY3() + dy);
+        } else if (s instanceof FreehandShape) {
+             for (var p : ((FreehandShape)s).getPoints()) {
+                 p.put("x", p.get("x") + dx);
+                 p.put("y", p.get("y") + dy);
+             }
+        }
+    }
+
+    private void saveStateToUndo() {
+        List<Shape> snapshot = new ArrayList<>();
+        for (Shape s : shapes) snapshot.add(s.clone());
+        undoStack.push(snapshot);
+    }
+
+    private void saveStateToRedo() {
+        List<Shape> snapshot = new ArrayList<>();
+        for (Shape s : shapes) snapshot.add(s.clone());
+        redoStack.push(snapshot);
+    }
+
     private Shape getShapeById(String id) {
         for (Shape s : shapes) if (s.getId().equals(id)) return s;
         return null;
     }
 
-    private boolean hitTest(Shape s, double x, double y) {
-        // Paste your hitTest logic here
+    private boolean hitTest(Shape s, double px, double py) {
+        if (s instanceof Rectangle) {
+            Rectangle r = (Rectangle) s;
+            return px >= r.getX() && px <= r.getX() + r.getWidth() && py >= r.getY() && py <= r.getY() + r.getHeight();
+        }
+        if (s instanceof Square) {
+            Square sq = (Square) s;
+            return px >= sq.getX() && px <= sq.getX() + sq.getSideLength() && py >= sq.getY() && py <= sq.getY() + sq.getSideLength();
+        }
+        if (s instanceof Circle) {
+            Circle c = (Circle) s;
+            double dx = px - c.getX(); double dy = py - c.getY();
+            return dx*dx + dy*dy <= c.getRadius()*c.getRadius();
+        }
+        if (s instanceof Ellipse) {
+            Ellipse e = (Ellipse) s;
+            double val = Math.pow(px - e.getX(), 2) / Math.pow(e.getRadiusX(), 2) + Math.pow(py - e.getY(), 2) / Math.pow(e.getRadiusY(), 2);
+            return val <= 1.0;
+        }
+        // Basic check for Triangle bounding box
+        if (s instanceof Triangle) {
+             Triangle t = (Triangle) s;
+             double minX = Math.min(t.getX(), Math.min(t.getX2(), t.getX3()));
+             double maxX = Math.max(t.getX(), Math.max(t.getX2(), t.getX3()));
+             double minY = Math.min(t.getY(), Math.min(t.getY2(), t.getY3()));
+             double maxY = Math.max(t.getY(), Math.max(t.getY2(), t.getY3()));
+             return px >= minX && px <= maxX && py >= minY && py <= maxY;
+        }
         return true; 
     }
 
@@ -175,5 +265,16 @@ public class PaintService {
         saveStateToUndo();
         shapes = loaded;
         selectedShapeId = null;
+    }
+
+    // Update Fill Color
+    public void updateFillColor(String color) {
+        if (selectedShapeId == null) return;
+        Shape s = getShapeById(selectedShapeId);
+        if (s != null) {
+            saveStateToUndo();
+            s.setFillColor(color);
+            redoStack.clear();
+        }
     }
 }

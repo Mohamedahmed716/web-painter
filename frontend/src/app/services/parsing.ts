@@ -7,7 +7,6 @@ import { Shape } from '../models/shape';
 export class Parsing {
   parse(rawJson: any[]): Shape[] {
     if (!rawJson || !Array.isArray(rawJson)) {
-      console.warn('Backend returned invalid shape data:', rawJson);
       return [];
     }
     return rawJson.map((item) => this.convertSingleShape(item));
@@ -20,7 +19,9 @@ export class Parsing {
       x: item.x,
       y: item.y,
       color: item.color,
-      fillColor: item.fillColor, // Ensure fill is carried over
+
+      // *** CRITICAL: MAP FILL COLOR ***
+      fillColor: item.fillColor,
 
       radius: undefined,
       width: undefined,
@@ -31,27 +32,22 @@ export class Parsing {
       case 'circle':
         shape.radius = item.radius;
         break;
-
       case 'rectangle':
         shape.width = item.width;
         shape.height = item.height;
         break;
-
       case 'square':
         shape.width = item.sideLength;
         shape.height = item.sideLength;
         break;
-
       case 'ellipse':
         shape.radiusX = item.radiusX;
         shape.radiusY = item.radiusY;
         break;
-
       case 'line':
         (shape as any).x2 = item.x2;
         (shape as any).y2 = item.y2;
         break;
-
       case 'triangle':
         (shape as any).x2 = item.x2;
         (shape as any).y2 = item.y2;
@@ -62,7 +58,6 @@ export class Parsing {
         (shape as any).points = item.points;
         break;
     }
-
     return shape;
   }
 }

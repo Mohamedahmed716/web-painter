@@ -1,29 +1,33 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { BoardComponent } from '../components/board/board';
-import { Shape } from '../models/shape';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DrawingService {
+  // State sources
   private toolSource = new BehaviorSubject<string>('circle');
   private colorSource = new BehaviorSubject<string>('#000000');
-  private undoSource = new Subject<any[]>();
-  private redoSource = new Subject<any[]>();
 
+  // Triggers
+  private undoSource = new Subject<void>();
+  private redoSource = new Subject<void>();
+
+  // Observables
   currentTool$ = this.toolSource.asObservable();
   currentColor$ = this.colorSource.asObservable();
   undo$ = this.undoSource.asObservable();
   redo$ = this.redoSource.asObservable();
+
+  // Action Triggers
   delete$ = new Subject<void>();
   copy$ = new Subject<void>();
-  colorChange$ = new Subject<any>();
+
+  // CRITICAL: This must carry the payload (List<Shape>) from the backend
+  colorChange$ = new Subject<any[]>();
 
   triggerAction(action: string) {
-    if (action === 'delete') {
-      this.delete$.next();
-    }
+    if (action === 'delete') this.delete$.next();
     if (action === 'copy') this.copy$.next();
   }
 
@@ -36,10 +40,9 @@ export class DrawingService {
   }
 
   undo() {
-    this.undoSource.next([]);
+    this.undoSource.next();
   }
-
   redo() {
-    this.redoSource.next([]);
+    this.redoSource.next();
   }
 }

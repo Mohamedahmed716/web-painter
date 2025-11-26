@@ -16,251 +16,179 @@ export class BoardComponent implements AfterViewInit {
   private ctx!: CanvasRenderingContext2D;
   private apiService = inject(ApiService);
   private drawingService = inject(DrawingService);
-  selectedShapeId: string | null = null;
-  isPasting = false;
-  copiedShapeId: string | null = null;
-
-
 
   @Input() currentTool: string = 'circle';
   @Input() currentColor: string = '#000000';
   shapes: Shape[] = [];
 
+  // State
   isDrawing = false;
+  isMoving = false;
+  isResizing = false;
+  isPasting = false;
+
   startX = 0;
   startY = 0;
+  lastX = 0;
+  lastY = 0;
+
+  selectedShapeId: string | null = null;
   freehandPoints: { x: number; y: number }[] = [];
+  resizeAnchor = 'bottom-right';
+
   ngAfterViewInit(): void {
-    this.drawingService.colorChange$.subscribe(shapes => {
-  this.shapes = shapes;
-
-  // ⭐ update the selected shape ID
-  const selected = shapes.find((s: any) => s.selected);
-  this.selectedShapeId = selected?.id ?? null;
-
-  this.redrawAll();   // ⭐ immediately redraw canvas
-     });
-
-
-     this.drawingService.copy$.subscribe(() => this.copySelected());
-
-    this.drawingService.delete$.subscribe(() => this.deleteSelected());
     this.ctx = this.canvasRef.nativeElement.getContext('2d')!;
+
+    // --- Subscriptions ---
     this.drawingService.currentTool$.subscribe((tool) => (this.currentTool = tool));
     this.drawingService.currentColor$.subscribe((color) => (this.currentColor = color));
     this.drawingService.undo$.subscribe(() => this.undo());
     this.drawingService.redo$.subscribe(() => this.redo());
+
+    this.drawingService.delete$.subscribe(() => this.deleteSelected());
+
+    this.drawingService.copy$.subscribe(() => {
+      this.apiService.copySelected().subscribe();
+      this.isPasting = true;
+    });
+
+    // CRITICAL: When fill/stroke changes, update shapes and redraw
+    this.drawingService.colorChange$.subscribe((shapes) => {
+      this.shapes = shapes;
+      this.redrawAll();
+    });
+
     this.refreshBoard();
   }
 
-onMouseDown($event: MouseEvent) {
-  const x = $event.offsetX;
-  const y = $event.offsetY;
+  onMouseDown($event: MouseEvent) {
+    const x = $event.offsetX;
+    const y = $event.offsetY;
 
-  // =====================================
-  // SELECT TOOL (SELECT + START DRAG)
-  // =====================================
-  if (this.currentTool === 'select') {
-
-    // 1️⃣ START UNDO SNAPSHOT BEFORE ANYTHING ELSE
-    this.apiService.startMove().subscribe(); 
-
-    // setup dragging state
-    this.isMoving = true;
-    this.lastX = x;
-    this.lastY = y;
-
-    // 2️⃣ TELL BACKEND WHICH SHAPE TO SELECT
-    this.apiService.select(x, y).subscribe(shapes => {
-    this.shapes = shapes;
-
-    // ⭐ store selected ID from backend
-    const selected = shapes.find((s: any) => s.selected);
-    this.selectedShapeId = selected?.id ?? null;
-
-    this.redrawAll();
-    });
-    return;  // IMPORTANT → prevents drawing logic
-  }
-
-  // =====================================
-  // NORMAL DRAWING TOOLS
-  // =====================================
-  this.isDrawing = true;
-  this.startX = x;
-  this.startY = y;
-
-  if (this.currentTool === 'freehand') {
-    this.freehandPoints = [{ x: this.startX, y: this.startY }];
-  }
-  if (this.currentTool === 'resize') {
-  this.isResizing = true;
-
-  this.lastX = x;
-  this.lastY = y;
-
-  // Start ONE undo snapshot
-  this.apiService.startMove().subscribe();
-
-  return;
-}
-  // ==========================
-  // PASTE MODE: copy at click
-  // ==========================
-  if (this.isPasting) {
-    this.isPasting = false; // consume paste mode
-
-    // 1) Tell backend to create a copy (it will select the new copy)
-    this.apiService.copySelected().subscribe(shapesAfterCopy => {
-      this.shapes = shapesAfterCopy;
-
-      // Find the newly copied shape (selected = true from backend)
-      const copied = shapesAfterCopy.find((s: any) => s.selected === true);
-
-      if (!copied) {
-        this.redrawAll();
-        return;
-      }
-
-      // 2) Compute how much to move the new copy
-      const dx = x - copied.x;
-      const dy = y - copied.y;
-
-      // 3) Move the new copy so that its position goes to the click location
-      this.apiService.moveSelected(dx, dy).subscribe(shapesAfterMove => {
-        this.shapes = shapesAfterMove;
-
-        const selected = shapesAfterMove.find((s: any) => s.selected === true);
-        this.selectedShapeId = selected?.id ?? null;
-
+    if (this.isPasting) {
+      this.isPasting = false;
+      this.apiService.pasteSelected(x, y).subscribe((shapes) => {
+        this.shapes = shapes;
+        if (this.shapes.length > 0) {
+          this.selectedShapeId = this.shapes[this.shapes.length - 1].id!;
+        }
         this.redrawAll();
       });
-    });
+      return;
+    }
 
-    return; // important: don't fall into normal drawing/select logic
+    if (this.currentTool === 'select') {
+      this.apiService.select(x, y).subscribe((shapes) => {
+        this.shapes = shapes;
+        const found = this.findShapeAt(x, y);
+        this.selectedShapeId = found ? found.id! : null;
+
+        if (this.selectedShapeId) {
+          this.isMoving = true;
+          this.lastX = x;
+          this.lastY = y;
+          this.apiService.startMove().subscribe();
+        }
+        this.redrawAll();
+      });
+      return;
+    }
+
+    if (this.currentTool === 'resize') {
+      if (this.selectedShapeId) {
+        this.isResizing = true;
+        this.lastX = x;
+        this.lastY = y;
+        this.apiService.startMove().subscribe();
+      }
+      return;
+    }
+
+    this.isDrawing = true;
+    this.startX = x;
+    this.startY = y;
+
+    if (this.currentTool === 'freehand') {
+      this.freehandPoints = [{ x: this.startX, y: this.startY }];
+    }
   }
-
-  
-}
-
-
-
 
   onMouseMove($event: MouseEvent) {
-  const x = $event.offsetX;
-  const y = $event.offsetY;
+    const x = $event.offsetX;
+    const y = $event.offsetY;
 
-  // ================================
-  // MOVE SELECTED SHAPE
-  // ================================
-  if (this.currentTool === 'select' && this.isMoving) {
+    if (this.currentTool === 'select' && this.isMoving) {
+      const dx = x - this.lastX;
+      const dy = y - this.lastY;
+      this.lastX = x;
+      this.lastY = y;
+      this.apiService.moveSelected(dx, dy).subscribe((shapes) => {
+        this.shapes = shapes;
+        this.redrawAll();
+      });
+      return;
+    }
 
-    const dx = x - this.lastX;
-    const dy = y - this.lastY;
+    if (this.currentTool === 'resize' && this.isResizing) {
+      const dx = x - this.lastX;
+      const dy = y - this.lastY;
+      this.lastX = x;
+      this.lastY = y;
+      this.apiService.resizeSelected(this.resizeAnchor, dx, dy).subscribe((shapes) => {
+        this.shapes = shapes;
+        this.redrawAll();
+      });
+      return;
+    }
 
-    this.lastX = x;
-    this.lastY = y;
+    if (!this.isDrawing) return;
 
-    this.apiService.moveSelected(dx, dy).subscribe(shapes => {
-      this.shapes = shapes;
-      this.redrawAll();
-    });
+    if (this.currentTool === 'freehand') {
+      this.freehandPoints.push({ x: x, y: y });
+    }
 
-
-    return;
+    this.redrawAll();
+    this.drawPreview(this.startX, this.startY, x, y);
   }
-
-  // ================================
-  // NORMAL DRAWING LOGIC
-  // ================================
-  if (!this.isDrawing) return;
-
-  if (this.currentTool === 'freehand') {
-    this.freehandPoints.push({ x, y });
-  }
-
-  this.redrawAll();
-  this.drawPreview(this.startX, this.startY, x, y);
-  if (this.currentTool === 'resize' && this.isResizing) {
-  const dx = x - this.lastX;
-  const dy = y - this.lastY;
-
-  this.lastX = x;
-  this.lastY = y;
-
-  this.apiService.resizeSelected(this.resizeAnchor, dx, dy)
-    .subscribe(shapes => {
-      this.shapes = shapes;
-      this.redrawAll();
-    });
-
-  return;
-}
-}
-
-
 
   onMouseUp($event: MouseEvent) {
+    if (this.isMoving || this.isResizing) {
+      this.isMoving = false;
+      this.isResizing = false;
+      this.apiService.endMove().subscribe((shapes) => {
+        this.shapes = shapes;
+        this.redrawAll();
+      });
+      return;
+    }
 
-  // ================================
-  // STOP DRAGGING SHAPE
-  // ================================
-  if (this.currentTool === 'select') {
-    this.isMoving = false;
+    if (!this.isDrawing) return;
+    this.isDrawing = false;
 
-    // End movement snapshot (ONE undo record)
-    this.apiService.endMove().subscribe(shapes => {
-      this.shapes = shapes;
-      this.redrawAll();
+    const type = this.currentTool;
+    const params: any = { color: this.currentColor, type: type };
+
+    if (type === 'freehand') {
+      params.points = this.freehandPoints;
+    } else {
+      params.x1 = this.startX;
+      params.y1 = this.startY;
+      params.x2 = $event.offsetX;
+      params.y2 = $event.offsetY;
+    }
+
+    this.apiService.createShape(type, params).subscribe({
+      next: (data) => {
+        this.shapes = data;
+        this.freehandPoints = [];
+        if (this.shapes.length > 0) {
+          this.selectedShapeId = this.shapes[this.shapes.length - 1].id!;
+        }
+        this.redrawAll();
+      },
+      error: (err) => console.error('Error creating shape', err),
     });
-
-    return; // IMPORTANT
   }
-
-  // ================================
-  // NORMAL DRAWING LOGIC
-  // ================================
-  if (!this.isDrawing) return;
-  this.isDrawing = false;
-
-  const type = this.currentTool;
-  const params: any = { color: this.currentColor, type: type };
-
-  if (type === 'freehand') {
-    params.points = this.freehandPoints;
-  } else {
-    params.x1 = this.startX;
-    params.y1 = this.startY;
-    params.x2 = $event.offsetX;
-    params.y2 = $event.offsetY;
-  }
-
-  this.apiService.createShape(type, params).subscribe({
-    next: (data) => {
-      this.shapes = data;
-      this.freehandPoints = [];
-      this.redrawAll();
-    },
-    error: (err) => console.error('Error creating shape', err),
-  });
-  // ===============================
-// END RESIZING
-// ===============================
-if (this.currentTool === 'resize' && this.isResizing) {
-  this.isResizing = false;
-
-  this.apiService.endMove().subscribe(shapes => {
-    this.shapes = shapes;
-    this.redrawAll();
-  });
-
-  return;
-}
-
-
-}
-
-
 
   refreshBoard() {
     this.apiService.getShapes().subscribe({
@@ -272,27 +200,56 @@ if (this.currentTool === 'resize' && this.isResizing) {
     });
   }
 
- redrawAll() {
-  this.ctx.clearRect(
-    0,
-    0,
-    this.canvasRef.nativeElement.width,
-    this.canvasRef.nativeElement.height
-  );
-
-  this.shapes.forEach((shape: any) => {
-  this.drawShape(shape);
-  if (shape.selected || shape.id === this.selectedShapeId) {
-    this.drawSelectionOutline(this.ctx, shape);
+  redrawAll() {
+    this.ctx.clearRect(
+      0,
+      0,
+      this.canvasRef.nativeElement.width,
+      this.canvasRef.nativeElement.height
+    );
+    this.shapes.forEach((shape) => {
+      this.drawShape(shape);
+      // Highlight if selected
+      if (shape.id === this.selectedShapeId) {
+        this.drawSelectionOutline(shape);
+      }
+    });
   }
-});
-}
 
+  deleteSelected() {
+    this.apiService.deleteSelected().subscribe((shapes) => {
+      this.shapes = shapes;
+      this.selectedShapeId = null;
+      this.redrawAll();
+    });
+  }
+
+  undo() {
+    this.apiService.undo().subscribe((shapes) => {
+      this.shapes = shapes;
+      this.redrawAll();
+    });
+  }
+  redo() {
+    this.apiService.redo().subscribe((shapes) => {
+      this.shapes = shapes;
+      this.redrawAll();
+    });
+  }
+
+  // --- DRAWING LOGIC ---
 
   drawShape(s: Shape) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = s.color;
     this.ctx.lineWidth = 2;
+
+    // FILL LOGIC:
+    if (s.fillColor && s.fillColor !== 'transparent' && s.fillColor !== 'none') {
+      this.ctx.fillStyle = s.fillColor;
+    } else {
+      this.ctx.fillStyle = 'rgba(0,0,0,0)'; // Transparent
+    }
 
     if (s.type === 'circle') {
       this.ctx.arc(s.x, s.y, s.radius!, 0, 2 * Math.PI);
@@ -317,6 +274,11 @@ if (this.currentTool === 'resize' && this.isResizing) {
           this.ctx.lineTo(points[i].x, points[i].y);
         }
       }
+    }
+
+    // Apply Fill (Lines/Freehand usually not filled)
+    if (s.type !== 'line' && s.type !== 'freehand') {
+      this.ctx.fill();
     }
     this.ctx.stroke();
   }
@@ -362,147 +324,79 @@ if (this.currentTool === 'resize' && this.isResizing) {
     this.ctx.setLineDash([]);
   }
 
-  undo() {
-    this.apiService.undo().subscribe({
-      next: (shapes) => {
-        this.shapes = shapes;
-        this.refreshBoard();
-      },
-      error: (err) => console.error(err),
-    });
+  drawSelectionOutline(shape: any) {
+    const box = this.getBoundingBox(shape);
+    this.ctx.save();
+    this.ctx.strokeStyle = '#007bff';
+    this.ctx.lineWidth = 1;
+    this.ctx.setLineDash([6, 4]);
+    this.ctx.strokeRect(box.x - 5, box.y - 5, box.width + 10, box.height + 10);
+    this.ctx.restore();
   }
 
-  redo() {
-    this.apiService.redo().subscribe({
-      next: (shapes) => {
-        this.shapes = shapes;
-        this.refreshBoard();
-      },
-      error: (err) => console.error(err),
-    });
+  findShapeAt(px: number, py: number): Shape | null {
+    for (let i = this.shapes.length - 1; i >= 0; i--) {
+      const box = this.getBoundingBox(this.shapes[i]);
+      if (
+        px >= box.x - 5 &&
+        px <= box.x + box.width + 5 &&
+        py >= box.y - 5 &&
+        py <= box.y + box.height + 5
+      ) {
+        return this.shapes[i];
+      }
+    }
+    return null;
   }
-  deleteSelected() {
-  this.apiService.deleteSelected().subscribe(shapes => {
-    this.shapes = shapes;
 
-    // ⭐ FIX: clear selection after delete
-    this.selectedShapeId = null;
-
-    this.redrawAll();
-  });
-}
-copySelected() {
-  this.apiService.copySelected().subscribe(shapes => {
-    this.shapes = shapes;
-
-    const selected = shapes.find((s: any) => s.selected === true);
-    this.selectedShapeId = selected?.id ?? null;
-
-    this.redrawAll();
-  });
-}
-
-
-
-
-
-private drawSelectionOutline(ctx: CanvasRenderingContext2D, shape: any) {
-  const box = this.getBoundingBox(shape);
-
-  ctx.save();
-  ctx.strokeStyle = "#007bff";
-  ctx.lineWidth = 2;
-  ctx.setLineDash([6, 4]);
-  ctx.strokeRect(box.x - 4, box.y - 4, box.width + 8, box.height + 8);
-  ctx.restore();
-
-}
-
-private getBoundingBox(
-  shape: any
-): { x: number; y: number; width: number; height: number } {
-  switch (shape.type) {
-
-    case 'rectangle':
-      return {
-        x: shape.x,
-        y: shape.y,
-        width: shape.width,
-        height: shape.height
-      };
-
-    case 'square':
-      return {
-        x: shape.x,
-        y: shape.y,
-        width: shape.sideLength,
-        height: shape.sideLength
-      };
-
-    case 'circle':
-      return {
-        x: shape.x - shape.radius,
-        y: shape.y - shape.radius,
-        width: shape.radius * 2,
-        height: shape.radius * 2
-      };
-
-    case 'ellipse':
-      return {
-        x: shape.x - shape.radiusX,
-        y: shape.y - shape.radiusY,
-        width: shape.radiusX * 2,
-        height: shape.radiusY * 2
-      };
-
-    case 'line':
-      return {
-        x: Math.min(shape.x, shape.x2),
-        y: Math.min(shape.y, shape.y2),
-        width: Math.abs(shape.x2 - shape.x),
-        height: Math.abs(shape.y2 - shape.y)
-      };
-
-    case 'triangle':
-      const minX = Math.min(shape.x, shape.x2, shape.x3);
-      const minY = Math.min(shape.y, shape.y2, shape.y3);
-      const maxX = Math.max(shape.x, shape.x2, shape.x3);
-      const maxY = Math.max(shape.y, shape.y2, shape.y3);
-      return {
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY
-      };
-
-    case 'freehand':
-      let xs = shape.points.map((p: any) => p.x);
-      let ys = shape.points.map((p: any) => p.y);
-      return {
-        x: Math.min(...xs),
-        y: Math.min(...ys),
-        width: Math.max(...xs) - Math.min(...xs),
-        height: Math.max(...ys) - Math.min(...ys)
-      };
+  getBoundingBox(shape: any): { x: number; y: number; width: number; height: number } {
+    switch (shape.type) {
+      case 'rectangle':
+        return { x: shape.x, y: shape.y, width: shape.width, height: shape.height };
+      case 'square':
+        return { x: shape.x, y: shape.y, width: shape.width, height: shape.height };
+      case 'circle':
+        return {
+          x: shape.x - shape.radius,
+          y: shape.y - shape.radius,
+          width: shape.radius * 2,
+          height: shape.radius * 2,
+        };
+      case 'ellipse':
+        return {
+          x: shape.x - shape.radiusX,
+          y: shape.y - shape.radiusY,
+          width: shape.radiusX * 2,
+          height: shape.radiusY * 2,
+        };
+      case 'line':
+        return {
+          x: Math.min(shape.x, shape.x2),
+          y: Math.min(shape.y, shape.y2),
+          width: Math.abs(shape.x2 - shape.x),
+          height: Math.abs(shape.y2 - shape.y),
+        };
+      case 'triangle':
+        let tx = [shape.x, shape.x2, shape.x3],
+          ty = [shape.y, shape.y2, shape.y3];
+        return {
+          x: Math.min(...tx),
+          y: Math.min(...ty),
+          width: Math.max(...tx) - Math.min(...tx),
+          height: Math.max(...ty) - Math.min(...ty),
+        };
+      case 'freehand':
+        if (!shape.points || shape.points.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+        let fx = shape.points.map((p: any) => p.x),
+          fy = shape.points.map((p: any) => p.y);
+        return {
+          x: Math.min(...fx),
+          y: Math.min(...fy),
+          width: Math.max(...fx) - Math.min(...fx),
+          height: Math.max(...fy) - Math.min(...fy),
+        };
       default:
-          return { x: 0, y: 0, width: 0, height: 0 };
-
+        return { x: 0, y: 0, width: 0, height: 0 };
+    }
   }
-}
-startPasteMode() {
-  this.isPasting = true;
-  this.copiedShapeId = this.selectedShapeId; // store which shape was copied
-}
-
-
-
-  // --- Selection / Move state ---
-selected = false;
-isMoving = false;
-lastX = 0;
-lastY = 0;
-isResizing = false;
-resizeAnchor = "both";
-
-
 }

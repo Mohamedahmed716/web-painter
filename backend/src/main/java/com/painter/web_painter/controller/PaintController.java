@@ -1,5 +1,6 @@
 package com.painter.web_painter.controller;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -35,23 +36,40 @@ public class PaintController {
         this.paintService = paintService;
     }
 
+    // --- BASIC ---
     @GetMapping("/shapes")
     public ResponseEntity<List<Shape>> getAll() { return ResponseEntity.ok(paintService.getShapes()); }
 
     @PostMapping("/create")
     public ResponseEntity<List<Shape>> create(@RequestBody Map<String, Object> payload) {
-        Shape s = factory.createShape((String)payload.get("type"), (Map)payload.get("params"));
-        if (s != null) paintService.addShape(s);
-        return ResponseEntity.ok(paintService.getShapes());
+        try {
+            String type = (String) payload.get("type");
+            Map<String, Object> params = (Map<String, Object>) payload.get("params");
+            
+            Shape s = factory.createShape(type, params);
+            if (s != null) {
+                paintService.addShape(s);
+            }
+            return ResponseEntity.ok(paintService.getShapes());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping("/undo")
-    public ResponseEntity<List<Shape>> undo() { paintService.undo(); return ResponseEntity.ok(paintService.getShapes()); }
+    public ResponseEntity<List<Shape>> undo() { 
+        paintService.undo(); 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
 
     @PostMapping("/redo")
-    public ResponseEntity<List<Shape>> redo() { paintService.redo(); return ResponseEntity.ok(paintService.getShapes()); }
+    public ResponseEntity<List<Shape>> redo() { 
+        paintService.redo(); 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
 
-    // MANIPULATION
+    // --- MANIPULATION ---
     @PostMapping("/select")
     public ResponseEntity<List<Shape>> select(@RequestBody Map<String, Double> p) {
         paintService.selectShapeAt(p.get("x"), p.get("y"));
@@ -59,7 +77,10 @@ public class PaintController {
     }
 
     @PostMapping("/move/start")
-    public ResponseEntity<Void> startMove() { paintService.startMove(); return ResponseEntity.ok().build(); }
+    public ResponseEntity<Void> startMove() { 
+        paintService.startMove(); 
+        return ResponseEntity.ok().build(); 
+    }
 
     @PostMapping("/move")
     public ResponseEntity<List<Shape>> move(@RequestBody Map<String, Double> p) {
@@ -68,42 +89,94 @@ public class PaintController {
     }
 
     @PostMapping("/move/end")
-    public ResponseEntity<List<Shape>> endMove() { paintService.endMove(); return ResponseEntity.ok(paintService.getShapes()); }
+    public ResponseEntity<List<Shape>> endMove() { 
+        paintService.endMove(); 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
 
     @PostMapping("/copy")
-    public ResponseEntity<List<Shape>> copy() { paintService.copySelected(); return ResponseEntity.ok(paintService.getShapes()); }
+    public ResponseEntity<List<Shape>> copy() { 
+        paintService.copySelected(); 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
+    
+    @PostMapping("/paste")
+    public ResponseEntity<List<Shape>> paste(@RequestBody Map<String, Double> p) { 
+        paintService.pasteSelected(p.get("x"), p.get("y")); 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
 
     @PostMapping("/delete")
-    public ResponseEntity<List<Shape>> delete() { paintService.deleteSelected(); return ResponseEntity.ok(paintService.getShapes()); }
+    public ResponseEntity<List<Shape>> delete() { 
+        paintService.deleteSelected(); 
+        return ResponseEntity.ok(paintService.getShapes()); 
+    }
 
     @PostMapping("/resize")
     public ResponseEntity<List<Shape>> resize(@RequestBody Map<String, Object> p) {
-        paintService.resizeSelected((String)p.get("anchor"), ((Number)p.get("dx")).doubleValue(), ((Number)p.get("dy")).doubleValue());
+        paintService.resizeSelected(
+            (String)p.get("anchor"), 
+            ((Number)p.get("dx")).doubleValue(), 
+            ((Number)p.get("dy")).doubleValue()
+        );
         return ResponseEntity.ok(paintService.getShapes());
     }
 
+    // STROKE COLOR
     @PostMapping("/color")
     public ResponseEntity<List<Shape>> color(@RequestBody Map<String, String> p) {
         paintService.updateColor(p.get("color"));
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    // FILES
+    // FILL COLOR (This was missing!)
+    @PostMapping("/fill")
+    public ResponseEntity<List<Shape>> fill(@RequestBody Map<String, String> p) {
+        paintService.updateFillColor(p.get("fillColor"));
+        return ResponseEntity.ok(paintService.getShapes());
+    }
+
+    // --- FILES ---
+    
+    // FIX: Changed path to match Frontend API ('/files/save/json' -> '/save/json')
     @GetMapping("/save/json")
     public ResponseEntity<byte[]> saveJson() {
-        try { return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"d.json\"").body(paintService.SavetoJson().getBytes(StandardCharsets.UTF_8)); }
-        catch (Exception e) { return ResponseEntity.internalServerError().build(); }
+        try { 
+            String json = paintService.SavetoJson();
+            byte[] content = json.getBytes(StandardCharsets.UTF_8);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.json\"")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(content);
+        } catch (Exception e) { 
+            return ResponseEntity.internalServerError().build(); 
+        }
     }
 
+    // FIX: Changed path to match Frontend API ('/files/save/xml' -> '/save/xml')
     @GetMapping("/save/xml")
     public ResponseEntity<byte[]> saveXml() {
-        try { return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"d.xml\"").contentType(MediaType.APPLICATION_XML).body(paintService.SavetoXml().getBytes(StandardCharsets.ISO_8859_1)); }
-        catch (Exception e) { return ResponseEntity.internalServerError().build(); }
+        try { 
+            String xml = paintService.SavetoXml();
+            byte[] content = xml.getBytes(Charset.forName("ISO-8859-1"));
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"drawing.xml\"")
+                .contentType(MediaType.APPLICATION_XML)
+                .body(content); 
+        } catch (Exception e) { 
+            return ResponseEntity.internalServerError().build(); 
+        }
     }
 
-    @PostMapping("/load")
+    // FIX: Changed path to match Frontend API ('/files/load' -> '/load')
+    @PostMapping("/load") 
     public ResponseEntity<String> load(@RequestParam("file") MultipartFile file) {
-        try { paintService.loadFromFile(file); return ResponseEntity.ok("Loaded"); }
-        catch (Exception e) { return ResponseEntity.badRequest().body(e.getMessage()); }
+        try { 
+            paintService.loadFromFile(file); 
+            return ResponseEntity.ok("Loaded"); 
+        } catch (Exception e) { 
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage()); 
+        }
     }
 }
