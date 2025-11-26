@@ -81,7 +81,6 @@ export class ApiService {
       .pipe(map((d) => this.parsing.parse(d)));
   }
 
-  // NEW: Returns Blob for "Save As"
   downloadFile(format: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/save/${format}`, { responseType: 'blob' });
   }
@@ -97,7 +96,7 @@ export class ApiService {
       .post<any[]>(`${this.baseUrl}/paste`, { x, y })
       .pipe(map((d) => this.parsing.parse(d)));
   }
-  // NEW: Update Fill Color
+
   updateFillColor(color: string): Observable<Shape[]> {
     return this.http
       .post<any[]>(`${this.baseUrl}/fill`, { color })

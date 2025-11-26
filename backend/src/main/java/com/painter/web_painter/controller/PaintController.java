@@ -36,7 +36,6 @@ public class PaintController {
         this.paintService = paintService;
     }
 
-    // --- BASIC ---
     @GetMapping("/shapes")
     public ResponseEntity<List<Shape>> getAll() { return ResponseEntity.ok(paintService.getShapes()); }
 
@@ -69,7 +68,6 @@ public class PaintController {
         return ResponseEntity.ok(paintService.getShapes()); 
     }
 
-    // --- MANIPULATION ---
     @PostMapping("/select")
     public ResponseEntity<List<Shape>> select(@RequestBody Map<String, Double> p) {
         paintService.selectShapeAt(p.get("x"), p.get("y"));
@@ -122,23 +120,18 @@ public class PaintController {
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    // STROKE COLOR
     @PostMapping("/color")
     public ResponseEntity<List<Shape>> color(@RequestBody Map<String, String> p) {
         paintService.updateColor(p.get("color"));
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    // FILL COLOR (This was missing!)
     @PostMapping("/fill")
     public ResponseEntity<List<Shape>> fill(@RequestBody Map<String, String> p) {
         paintService.updateFillColor(p.get("fillColor"));
         return ResponseEntity.ok(paintService.getShapes());
     }
 
-    // --- FILES ---
-    
-    // FIX: Changed path to match Frontend API ('/files/save/json' -> '/save/json')
     @GetMapping("/save/json")
     public ResponseEntity<byte[]> saveJson() {
         try { 
@@ -153,7 +146,6 @@ public class PaintController {
         }
     }
 
-    // FIX: Changed path to match Frontend API ('/files/save/xml' -> '/save/xml')
     @GetMapping("/save/xml")
     public ResponseEntity<byte[]> saveXml() {
         try { 
@@ -168,7 +160,6 @@ public class PaintController {
         }
     }
 
-    // FIX: Changed path to match Frontend API ('/files/load' -> '/load')
     @PostMapping("/load") 
     public ResponseEntity<String> load(@RequestParam("file") MultipartFile file) {
         try { 

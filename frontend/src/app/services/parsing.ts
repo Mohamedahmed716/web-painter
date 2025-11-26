@@ -19,8 +19,6 @@ export class Parsing {
       x: item.x,
       y: item.y,
       color: item.color,
-
-      // *** CRITICAL: MAP FILL COLOR ***
       fillColor: item.fillColor,
 
       radius: undefined,

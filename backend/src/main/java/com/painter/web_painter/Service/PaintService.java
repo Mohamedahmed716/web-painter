@@ -46,7 +46,6 @@ public class PaintService {
         shapes = redoStack.pop();
     }
 
-    // --- SELECTION ---
     public void selectShapeAt(double x, double y) {
         Shape found = null;
         for (int i = shapes.size() - 1; i >= 0; i--) {
@@ -58,7 +57,6 @@ public class PaintService {
         selectedShapeId = (found != null) ? found.getId() : null;
     }
 
-    // --- MOVE ---
     public void startMove() {
         moveSnapshot = new ArrayList<>();
         for (Shape s : shapes) moveSnapshot.add(s.clone());
@@ -78,7 +76,6 @@ public class PaintService {
         }
     }
 
-    // --- COPY & PASTE ---
     public void copySelected() {
         if (selectedShapeId != null) {
             clipboardShapeId = selectedShapeId;
@@ -108,7 +105,6 @@ public class PaintService {
         redoStack.clear();
     }
 
-    // --- RESIZE ---
     public void resizeSelected(String anchor, double dx, double dy) {
         if (selectedShapeId == null) return;
         Shape s = getShapeById(selectedShapeId);
@@ -134,19 +130,11 @@ public class PaintService {
             l.setY2(l.getY2() + dy);
         } else if (s instanceof Triangle) {
             Triangle t = (Triangle) s;
-            // Assuming standard isosceles creation:
-            // x,y is top point. x2,y2 is bottom-left. x3,y3 is bottom-right.
-            
-            // Stretch width (affects x3 and half of x2 if we want to keep center, 
-            // or just x3 to stretch right)
-            // Let's stretch to the right and down
-            
-            t.setX3(t.getX3() + dx); // Bottom-right moves X
-            t.setY2(t.getY2() + dy); // Bottom-left moves Y
-            t.setY3(t.getY3() + dy); // Bottom-right moves Y
-            
-            // Optional: Keep it isosceles by moving x2 inversely? 
-            // Or just simple stretch. Simple stretch logic above.
+
+            t.setX3(t.getX3() + dx);
+            t.setY2(t.getY2() + dy);
+            t.setY3(t.getY3() + dy);
+
         }
     }
 
@@ -168,7 +156,6 @@ public class PaintService {
         }
     }
 
-    // --- HELPERS ---
     private void moveShape(Shape s, double dx, double dy) {
         if (s instanceof Rectangle) { ((Rectangle)s).setX(((Rectangle)s).getX() + dx); ((Rectangle)s).setY(((Rectangle)s).getY() + dy); }
         else if (s instanceof Circle) { ((Circle)s).setX(((Circle)s).getX() + dx); ((Circle)s).setY(((Circle)s).getY() + dy); }
@@ -227,7 +214,7 @@ public class PaintService {
             double val = Math.pow(px - e.getX(), 2) / Math.pow(e.getRadiusX(), 2) + Math.pow(py - e.getY(), 2) / Math.pow(e.getRadiusY(), 2);
             return val <= 1.0;
         }
-        // Basic check for Triangle bounding box
+
         if (s instanceof Triangle) {
              Triangle t = (Triangle) s;
              double minX = Math.min(t.getX(), Math.min(t.getX2(), t.getX3()));
@@ -239,7 +226,6 @@ public class PaintService {
         return true; 
     }
 
-    // --- FILES ---
     public void clearBoard() {
         saveStateToUndo();
         shapes.clear();
@@ -267,7 +253,6 @@ public class PaintService {
         selectedShapeId = null;
     }
 
-    // Update Fill Color
     public void updateFillColor(String color) {
         if (selectedShapeId == null) return;
         Shape s = getShapeById(selectedShapeId);
